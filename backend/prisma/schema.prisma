@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  passwordHash   String   @map("password_hash")
+  name           String
+  profession     String?
+  incomeRange    Decimal? @map("income_range")
+  riskProfile    String?  @map("risk_profile")
+  financialScore Int      @default(0) @map("financial_score")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  categories    Category[]
+  transactions  Transaction[]
+  budgets       Budget[]
+  savingsGoals  SavingsGoal[]
+  debts         Debt[]
+
+  @@map("users")
+}
+
+model Category {
+  id     String       @id @default(uuid())
+  userId String?      @map("user_id")
+  name   String
+  type   CategoryType
+  icon   String?
+
+  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@map("categories")
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  categoryId  String   @map("category_id")
+  amount      Decimal
+  date        DateTime @db.Date
+  description String?
+  receiptUrl  String?  @map("receipt_url")
+  isRecurring Boolean  @default(false) @map("is_recurring")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@map("transactions")
+}
+
+model Budget {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  categoryId  String   @map("category_id")
+  amountLimit Decimal  @map("amount_limit")
+  monthYear   DateTime @map("month_year") @db.Date
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@map("budgets")
+}
+
+model SavingsGoal {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  name           String
+  targetAmount   Decimal   @map("target_amount")
+  currentAmount  Decimal   @default(0) @map("current_amount")
+  deadline       DateTime? @db.Date
+  status         String    @default("ON_TRACK")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("savings_goals")
+}
+
+model Debt {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  lenderName   String   @map("lender_name")
+  totalAmount  Decimal  @map("total_amount")
+  remaining    Decimal
+  interestRate Decimal? @map("interest_rate")
+  dueDate      DateTime? @map("due_date") @db.Date
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("debts")
+}

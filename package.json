@@ -1,0 +1,18 @@
+{
+  "name": "finance-pribadi",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n backend,project -c blue,green \"npm run dev -w backend\" \"node server.js\"",
+    "start": "node server.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
