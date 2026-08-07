@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+frontend/dist/
+
+.env
+.env.*
+!.env.example
+
+logs/
+npm-debug.log*
+
+.DS_Store
+.vscode/
