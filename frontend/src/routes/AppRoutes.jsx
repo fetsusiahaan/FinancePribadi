@@ -3,6 +3,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { Login } from "../pages/Login";
 import { Register } from "../pages/Register";
 import { Dashboard } from "../pages/Dashboard";
+import { Transactions } from "../pages/Transactions";
+import { Budgets } from "../pages/Budgets";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -19,6 +21,22 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/transactions"
+        element={
+          <ProtectedRoute>
+            <Transactions />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/budgets"
+        element={
+          <ProtectedRoute>
+            <Budgets />
           </ProtectedRoute>
         }
       />
