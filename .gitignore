@@ -12,3 +12,6 @@ npm-debug.log*
 
 .DS_Store
 .vscode/
+
+# Skill Claude Code pihak ketiga — di-install per mesin, bukan bagian source project.
+.claude/

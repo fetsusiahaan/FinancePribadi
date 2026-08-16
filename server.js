@@ -2,6 +2,18 @@ const express = require("express");
 const path = require("path");
 const http = require("http");
 const fs = require("fs");
+const os = require("os");
+
+function getLanIps() {
+  const nets = os.networkInterfaces();
+  const ips = [];
+  for (const iface of Object.values(nets)) {
+    for (const net of iface || []) {
+      if (net.family === "IPv4" && !net.internal) ips.push(net.address);
+    }
+  }
+  return ips;
+}
 
 const app = express();
 const PORT = process.env.PORT || 5173;
@@ -88,7 +100,17 @@ app.get("/*splat", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
+  const lanIps = getLanIps();
+  console.log("");
+  console.log(`  ➜  Local:   http://localhost:${PORT}/`);
+  for (const ip of lanIps) {
+    console.log(`  ➜  Network: http://${ip}:${PORT}/`);
+  }
+  console.log("");
   logFrontend(`Server Frontend running on http://localhost:${PORT}`);
+  for (const ip of lanIps) {
+    logFrontend(`Server Frontend accessible on http://${ip}:${PORT}`);
+  }
   logBackend(`Proxy API active: http://localhost:${PORT}/api -> http://${BACKEND_HOST}:${BACKEND_PORT}`);
 });

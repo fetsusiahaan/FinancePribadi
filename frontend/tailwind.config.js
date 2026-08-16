@@ -3,6 +3,19 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "Roboto",
+          "Helvetica Neue",
+          "Arial",
+          "sans-serif",
+        ],
+      },
       colors: {
         primary: "#2563eb",
         secondary: "#10b981",
@@ -30,6 +43,22 @@ export default {
         "dark-on-surface-variant": "#c7c4d8",
         "dark-outline": "#8f8da3",
         "dark-outline-variant": "#464555",
+        // Warna semantik status — dipakai budget, validasi form, dan tren transaksi.
+        // Nilai light dipilih agar >=4.5:1 di atas permukaan terang, nilai dark
+        // sengaja lebih terang/desaturasi (bukan warna yang sama) supaya tetap terbaca.
+        success: "#047857",
+        "success-container": "#d1fae5",
+        "dark-success": "#34d399",
+        warning: "#a16207",
+        "warning-container": "#fef3c7",
+        "dark-warning": "#fbbf24",
+        danger: "#b91c1c",
+        "danger-container": "#fee2e2",
+        "dark-danger": "#f87171",
+      },
+      fontSize: {
+        "body-sm": ["0.875rem", { lineHeight: "1.25rem" }],
+        "label-sm": ["0.75rem", { lineHeight: "1rem" }],
       },
       spacing: {
         xs: "4px",
