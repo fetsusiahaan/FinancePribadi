@@ -5,17 +5,38 @@ import { Register } from "../pages/Register";
 import { Dashboard } from "../pages/Dashboard";
 import { Transactions } from "../pages/Transactions";
 import { Budgets } from "../pages/Budgets";
+import { Profile } from "../pages/Profile";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
+// Login/Register buat user yang belum login — kalau sudah punya session, lempar ke dashboard.
+function GuestRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
+}
+
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route
+        path="/login"
+        element={
+          <GuestRoute>
+            <Login />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <GuestRoute>
+            <Register />
+          </GuestRoute>
+        }
+      />
       <Route
         path="/dashboard"
         element={
@@ -37,6 +58,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <Budgets />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />

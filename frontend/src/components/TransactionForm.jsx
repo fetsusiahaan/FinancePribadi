@@ -4,7 +4,7 @@ import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
 import { Button } from "./ui/Button";
 import { getCategories } from "../services/category.service";
-import { todayValue } from "../utils/format";
+import { todayValue, formatThousands, stripThousands } from "../utils/format";
 
 const emptyForm = { type: "EXPENSE", amount: "", date: todayValue(), category_id: "", description: "", is_recurring: false };
 
@@ -87,19 +87,18 @@ export function TransactionForm({ initial, onSubmit, onCancel, submitting, error
         </label>
         <Input
           id="amount"
-          type="number"
+          type="text"
           inputMode="numeric"
-          min="1"
-          step="any"
+          autoComplete="off"
           required
-          placeholder="50000"
+          placeholder="50.000"
           aria-describedby="amount-help"
           className="tnum"
-          value={form.amount}
-          onChange={(e) => setForm({ ...form, amount: e.target.value })}
+          value={formatThousands(form.amount)}
+          onChange={(e) => setForm({ ...form, amount: stripThousands(e.target.value) })}
         />
         <p id="amount-help" className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant">
-          Isi angka saja, tanpa titik atau "Rp".
+          Titik ribuan otomatis mengikuti angka yang kamu ketik.
         </p>
       </div>
 

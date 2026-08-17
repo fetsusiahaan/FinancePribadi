@@ -32,3 +32,12 @@ export const currentMonthValue = () => {
 };
 
 export const todayValue = () => new Date().toISOString().slice(0, 10);
+
+// Format angka mentah jadi string berpemisah ribuan ala "50.000" saat diketik.
+export const formatThousands = (rawDigits) => {
+  if (!rawDigits) return "";
+  return new Intl.NumberFormat("id-ID").format(Number(rawDigits));
+};
+
+// Kebalikannya: buang semua selain digit, supaya value yang dikirim ke form tetap angka murni.
+export const stripThousands = (formatted) => formatted.replace(/\D/g, "");

@@ -52,7 +52,11 @@ export function Register() {
     <div className="bg-surface-container-lowest dark:bg-dark-background text-on-background dark:text-dark-on-background antialiased h-dvh overflow-hidden flex">
       <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-gutter py-md bg-surface-container-lowest dark:bg-dark-surface-container-lowest shadow-sm">
         <div className="flex items-center gap-sm">
-          <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: '"FILL" 1' }}>
+          <span
+            className="material-symbols-outlined text-primary text-3xl"
+            style={{ fontVariationSettings: '"FILL" 1' }}
+            aria-hidden="true"
+          >
             hive
           </span>
           <span className="font-semibold text-xl text-on-background dark:text-dark-on-background tracking-tight">Finora AI</span>
@@ -79,17 +83,21 @@ export function Register() {
                   Nama Lengkap
                 </label>
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]">
+                  <span
+                    className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]"
+                    aria-hidden="true"
+                  >
                     person
                   </span>
                   <input
                     id="name"
                     type="text"
                     required
+                    autoComplete="name"
                     placeholder="Nama lu"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full pl-xl pr-md py-[6px] bg-surface-container-lowest dark:bg-dark-surface-container-lowest border border-outline-variant dark:border-dark-outline-variant rounded-lg text-on-background dark:text-dark-on-background focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all placeholder:text-outline dark:placeholder:text-dark-outline text-body-sm"
+                    className="w-full min-h-11 pl-xl pr-md py-[6px] bg-surface-container-lowest dark:bg-dark-surface-container-lowest border border-outline-variant dark:border-dark-outline-variant rounded-lg text-on-background dark:text-dark-on-background focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all placeholder:text-outline dark:placeholder:text-dark-outline text-body-sm"
                   />
                 </div>
               </div>
@@ -99,17 +107,21 @@ export function Register() {
                   Email
                 </label>
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]">
+                  <span
+                    className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]"
+                    aria-hidden="true"
+                  >
                     mail
                   </span>
                   <input
                     id="email"
                     type="email"
                     required
+                    autoComplete="email"
                     placeholder="budi@example.com"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full pl-xl pr-md py-[6px] bg-surface-container-lowest dark:bg-dark-surface-container-lowest border border-outline-variant dark:border-dark-outline-variant rounded-lg text-on-background dark:text-dark-on-background focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all placeholder:text-outline dark:placeholder:text-dark-outline text-body-sm"
+                    className="w-full min-h-11 pl-xl pr-md py-[6px] bg-surface-container-lowest dark:bg-dark-surface-container-lowest border border-outline-variant dark:border-dark-outline-variant rounded-lg text-on-background dark:text-dark-on-background focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all placeholder:text-outline dark:placeholder:text-dark-outline text-body-sm"
                   />
                 </div>
               </div>
@@ -119,7 +131,10 @@ export function Register() {
                   Password
                 </label>
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]">
+                  <span
+                    className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]"
+                    aria-hidden="true"
+                  >
                     lock
                   </span>
                   <input
@@ -131,7 +146,7 @@ export function Register() {
                     placeholder="Minimal 8 karakter ya"
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="w-full pl-xl pr-xl py-[6px] bg-surface-container-lowest dark:bg-dark-surface-container-lowest border border-outline-variant dark:border-dark-outline-variant rounded-lg text-on-background dark:text-dark-on-background focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all placeholder:text-outline dark:placeholder:text-dark-outline text-body-sm"
+                    className="w-full min-h-11 pl-xl pr-xl py-[6px] bg-surface-container-lowest dark:bg-dark-surface-container-lowest border border-outline-variant dark:border-dark-outline-variant rounded-lg text-on-background dark:text-dark-on-background focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all placeholder:text-outline dark:placeholder:text-dark-outline text-body-sm"
                   />
                   <button
                     type="button"
@@ -179,7 +194,10 @@ export function Register() {
                   Konfirmasi Password
                 </label>
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]">
+                  <span
+                    className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]"
+                    aria-hidden="true"
+                  >
                     lock_reset
                   </span>
                   <input
@@ -190,7 +208,7 @@ export function Register() {
                     value={form.confirmPassword}
                     autoComplete="new-password"
                     onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                    className="w-full pl-xl pr-md py-[6px] bg-surface-container-lowest dark:bg-dark-surface-container-lowest border border-outline-variant dark:border-dark-outline-variant rounded-lg text-on-background dark:text-dark-on-background focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all placeholder:text-outline dark:placeholder:text-dark-outline text-body-sm"
+                    className="w-full min-h-11 pl-xl pr-md py-[6px] bg-surface-container-lowest dark:bg-dark-surface-container-lowest border border-outline-variant dark:border-dark-outline-variant rounded-lg text-on-background dark:text-dark-on-background focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all placeholder:text-outline dark:placeholder:text-dark-outline text-body-sm"
                   />
                 </div>
               </div>

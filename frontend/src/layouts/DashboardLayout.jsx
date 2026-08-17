@@ -1,12 +1,84 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { ThemeToggle } from "../components/ui/ThemeToggle";
+import { getMe } from "../services/user.service";
 
+// Sidebar desktop: tetap 3 item — desktop sudah punya ProfileChip terpisah
+// di topbar, jadi menambah "Profil" di sini akan jadi duplikat.
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { to: "/transactions", label: "Transaksi", icon: "receipt_long" },
   { to: "/budgets", label: "Budget", icon: "savings" },
 ];
+
+// Bottom nav mobile: 5 slot gaya FundFlex — Profil pindah ke sini (dicabut
+// dari header), slot tengah kosong diisi tombol tambah transaksi mengambang.
+const MOBILE_NAV_ITEMS = [
+  { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
+  { to: "/transactions", label: "Transaksi", icon: "receipt_long" },
+  null,
+  { to: "/budgets", label: "Budget", icon: "savings" },
+  { to: "/profile", label: "Profil", icon: "person" },
+];
+
+function initials(name) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
+}
+
+// Chip identitas di topbar desktop: avatar + nama + email dalam satu kotak.
+// Khusus desktop — di mobile Profil pindah ke slot bottom nav, jadi chip ini
+// disembunyikan lewat hidden md:flex supaya tidak duplikat dgn nav bawah.
+function ProfileChip() {
+  const { data: user } = useQuery({ queryKey: ["me"], queryFn: getMe });
+
+  return (
+    <NavLink
+      to="/profile"
+      aria-label={user ? `Profil: ${user.name}` : "Profil"}
+      className={({ isActive }) =>
+        `hidden md:flex items-center gap-xs min-h-11 pl-xs pr-sm max-w-[200px] rounded-full border cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+          isActive
+            ? "bg-primary/10 border-primary/30"
+            : "border-outline-variant/50 dark:border-dark-outline-variant/50 hover:bg-surface-container dark:hover:bg-dark-surface-container"
+        }`
+      }
+    >
+      <span
+        aria-hidden="true"
+        className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[12px] font-semibold shrink-0"
+      >
+        {user ? initials(user.name) : <span className="material-symbols-outlined text-[18px]">person</span>}
+      </span>
+      {user && (
+        <span className="min-w-0 text-left">
+          <span className="block text-body-sm font-medium leading-tight truncate">{user.name}</span>
+          <span className="block text-[11px] leading-tight text-on-surface-variant dark:text-dark-on-surface-variant truncate">
+            {user.email}
+          </span>
+        </span>
+      )}
+    </NavLink>
+  );
+}
+
+// Ikon lonceng di header mobile — mengarah ke seksi Notifikasi di Profile
+// (anchor native #notifikasi, tanpa JS scroll tambahan).
+function NotificationBell() {
+  return (
+    <NavLink
+      to="/profile#notifikasi"
+      aria-label="Notifikasi"
+      className="md:hidden w-11 h-11 flex items-center justify-center rounded-lg cursor-pointer text-on-surface-variant dark:text-dark-on-surface-variant hover:bg-surface-container dark:hover:bg-dark-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+    >
+      <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+        notifications
+      </span>
+    </NavLink>
+  );
+}
 
 export function DashboardLayout({ title, actions, children }) {
   const { logout } = useAuth();
@@ -82,6 +154,8 @@ export function DashboardLayout({ title, actions, children }) {
         </div>
         <div className="flex items-center gap-sm shrink-0">
           {actions}
+          <ProfileChip />
+          <NotificationBell />
           <ThemeToggle />
           <button
             type="button"
@@ -109,30 +183,47 @@ export function DashboardLayout({ title, actions, children }) {
         aria-label="Navigasi utama"
         className="md:hidden fixed bottom-0 left-0 w-full z-30 bg-surface-container-lowest dark:bg-dark-surface-container-lowest border-t border-outline-variant/40 dark:border-dark-outline-variant/40 flex pb-[env(safe-area-inset-bottom)]"
       >
-        {NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center gap-[2px] min-h-14 py-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
-                isActive ? "text-primary" : "text-on-surface-variant dark:text-dark-on-surface-variant"
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <span
-                  className="material-symbols-outlined text-[22px]"
-                  style={isActive ? { fontVariationSettings: '"FILL" 1' } : undefined}
-                  aria-hidden="true"
-                >
-                  {item.icon}
+        {MOBILE_NAV_ITEMS.map((item, i) =>
+          item === null ? (
+            // Slot tengah kosong: tombol tambah transaksi mengambang, gaya FundFlex.
+            // Link (bukan NavLink) — query ?new=1 dibaca mobile/Transactions.jsx
+            // untuk auto-buka modal create, tanpa menduplikasi state modal di sini.
+            <div key="fab" className="flex-1 flex items-center justify-center">
+              <Link
+                to="/transactions?new=1"
+                aria-label="Tambah transaksi"
+                className="w-12 h-12 -mt-5 rounded-full bg-primary text-on-primary shadow-lg shadow-primary/30 flex items-center justify-center cursor-pointer hover:brightness-110 motion-safe:active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <span className="material-symbols-outlined text-[26px]" aria-hidden="true">
+                  add
                 </span>
-                <span className="text-[11px] font-medium">{item.label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
+              </Link>
+            </div>
+          ) : (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex-1 flex flex-col items-center justify-center gap-[2px] min-h-14 py-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
+                  isActive ? "text-primary" : "text-on-surface-variant dark:text-dark-on-surface-variant"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span
+                    className="material-symbols-outlined text-[22px]"
+                    style={isActive ? { fontVariationSettings: '"FILL" 1' } : undefined}
+                    aria-hidden="true"
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="text-[11px] font-medium">{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          )
+        )}
       </nav>
     </div>
   );
