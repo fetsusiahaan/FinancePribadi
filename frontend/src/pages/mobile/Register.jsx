@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { ThemeToggle } from "../../components/ui/ThemeToggle";
+import "./Login.css";
 
 const SOCIAL_PROVIDERS = [
   { name: "Google", logo: "/images/google-logo.png" },
@@ -49,228 +50,170 @@ export function Register() {
   }
 
   return (
-    <div className="bg-surface-container-lowest dark:bg-dark-background text-on-background dark:text-dark-on-background antialiased h-dvh w-full overflow-hidden flex flex-col items-center relative">
-      {/* Hero full-bleed ditempatkan di paling atas (top-0) */}
-      <div className="w-full h-[clamp(100px,20dvh,220px)] shrink-0 overflow-hidden relative">
-        <img
-          src="/images/login-hero.png"
-          alt="Ilustrasi kartu AI Finance terhubung dengan grafik pertumbuhan finansial"
-          className="w-full h-full object-cover"
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-surface-container-lowest dark:to-dark-background"
-          aria-hidden="true"
-        />
-      </div>
-
-      {/* Header melayang transparan di atas hero */}
-      <header className="absolute top-0 left-0 right-0 w-full shrink-0 flex items-center justify-between px-md py-sm z-20">
-        <div className="flex items-center gap-2">
-          <span
-            className="material-symbols-outlined text-white drop-shadow-md"
-            style={{ fontVariationSettings: '"FILL" 1' }}
-            aria-hidden="true"
-          >
-            account_balance_wallet
+    <div className="finora-login-mobile">
+      <header className="ml-header">
+        <div className="ml-brand">
+          <span className="ml-brand-mark" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
           </span>
-          <h1 className="font-bold text-lg text-white tracking-tight drop-shadow-md">Finora AI</h1>
+          <span>Finora AI</span>
         </div>
         <ThemeToggle className="!border-white/40 !text-white hover:!bg-white/10" />
       </header>
 
-      {/* flex-1 min-h-0 + overflow-y-auto: mengisi sisa tinggi viewport persis;
-          overflow-y-auto jadi jaring pengaman di layar sangat pendek supaya form
-          panjang (6 field) tetap bisa dijangkau tanpa memaksa dokumen scroll. */}
-      <main className="w-full max-w-md sm:max-w-lg px-md pb-sm -mt-4 relative z-10 flex-1 min-h-0 flex flex-col justify-center overflow-y-auto">
-        <div className="mb-xs text-center shrink-0">
-          <h2 className="text-lg font-semibold text-on-background dark:text-dark-on-background mb-xs">Daftar Gercep! ⚡</h2>
-          <p className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant">
-            Bikin akun Finora AI kamu sekarang. Cuma butuh 2 menit kok.
-          </p>
+      <section className="ml-hero">
+        <div className="ml-illustration">
+          <span className="m-chart-bars" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </span>
+          <span className="m-trend" aria-hidden="true"></span>
+          <span className="m-card" aria-hidden="true">
+            <small>FINANCE</small>
+            <strong>Rp 12.8M</strong>
+          </span>
+          <span className="m-dots" aria-hidden="true">•••</span>
         </div>
+        <h2>Kelola Finansialmu Lebih Cerdas</h2>
+        <p>Pantau cuan, atur budget, dan lihat analitik real-time.</p>
+      </section>
 
-        <div className="shrink-0 bg-surface-container-lowest dark:bg-dark-surface-container-lowest rounded-xl border border-outline-variant/40 dark:border-dark-outline-variant/40 shadow-sm p-sm">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-xs">
-            <div className="flex flex-col gap-xs">
-              <label className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant" htmlFor="name">
-                Nama Lengkap
-              </label>
-              <div className="relative">
-                <span
-                  className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline dark:text-dark-outline"
-                  aria-hidden="true"
-                >
-                  person
-                </span>
-                <input
-                  id="name"
-                  type="text"
-                  required
-                  autoComplete="name"
-                  placeholder="Nama lu"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full min-h-11 bg-surface-container-lowest dark:bg-dark-surface-container-lowest pl-10 pr-4 py-2 rounded-lg border border-outline-variant/50 dark:border-dark-outline-variant/50 focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all text-base text-on-surface dark:text-dark-on-background placeholder:text-outline-variant dark:placeholder:text-dark-outline-variant"
-                />
-              </div>
+      <main className="ml-form-panel">
+        <div className="ml-form">
+          <h1>Daftar Gercep! ⚡</h1>
+          <p className="ml-subtitle">Bikin akun Finora AI kamu sekarang. Cuma butuh 2 menit kok.</p>
+
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="name">NAMA LENGKAP</label>
+            <div className="ml-input-wrapper">
+              <span className="material-symbols-outlined ml-input-icon" aria-hidden="true">
+                person
+              </span>
+              <input
+                id="name"
+                type="text"
+                required
+                autoComplete="name"
+                placeholder="Nama lu"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
             </div>
 
-            <div className="flex flex-col gap-xs">
-              <label className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant" htmlFor="email">
-                Email
-              </label>
-              <div className="relative">
-                <span
-                  className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline dark:text-dark-outline"
-                  aria-hidden="true"
-                >
-                  mail
-                </span>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  placeholder="budi@example.com"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full min-h-11 bg-surface-container-lowest dark:bg-dark-surface-container-lowest pl-10 pr-4 py-2 rounded-lg border border-outline-variant/50 dark:border-dark-outline-variant/50 focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all text-base text-on-surface dark:text-dark-on-background placeholder:text-outline-variant dark:placeholder:text-dark-outline-variant"
-                />
-              </div>
+            <label htmlFor="email">ALAMAT EMAIL</label>
+            <div className="ml-input-wrapper">
+              <span className="material-symbols-outlined ml-input-icon" aria-hidden="true">
+                mail
+              </span>
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="budi@example.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
             </div>
 
-            <div className="flex flex-col gap-xs">
-              <label className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant" htmlFor="password">
-                Password
-              </label>
-              <div className="relative">
-                <span
-                  className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline dark:text-dark-outline"
-                  aria-hidden="true"
-                >
-                  lock
+            <label htmlFor="password">PASSWORD</label>
+            <div className="ml-input-wrapper">
+              <span className="material-symbols-outlined ml-input-icon" aria-hidden="true">
+                lock
+              </span>
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={8}
+                autoComplete="new-password"
+                placeholder="Minimal 8 karakter ya"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                aria-pressed={showPassword}
+                className="ml-password-toggle"
+              >
+                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                  {showPassword ? "visibility" : "visibility_off"}
                 </span>
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  placeholder="Minimal 8 karakter ya"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full min-h-11 bg-surface-container-lowest dark:bg-dark-surface-container-lowest pl-10 pr-12 py-2 rounded-lg border border-outline-variant/50 dark:border-dark-outline-variant/50 focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all text-base text-on-surface dark:text-dark-on-background"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
-                  aria-pressed={showPassword}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-lg cursor-pointer text-on-surface-variant dark:text-dark-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
-                    {showPassword ? "visibility" : "visibility_off"}
-                  </span>
-                </button>
-              </div>
-              {form.password && (
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 flex gap-1" aria-hidden="true">
-                    {[0, 1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className={`h-1 flex-1 rounded-full ${
-                          i < strength.score
-                            ? strength.score <= 1
-                              ? "bg-danger dark:bg-dark-danger"
-                              : strength.score === 2
-                              ? "bg-warning dark:bg-dark-warning"
-                              : "bg-success dark:bg-dark-success"
-                            : "bg-surface-variant dark:bg-dark-surface-variant"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  {/* Label teks membawa arti kekuatan, jadi tidak bergantung warna bar. */}
-                  <span
-                    aria-live="polite"
-                    className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant whitespace-nowrap"
-                  >
-                    {strength.label}
-                  </span>
+              </button>
+            </div>
+
+            {form.password && (
+              <div className="ml-password-strength">
+                <div className="ml-strength-bars" aria-hidden="true">
+                  {[0, 1, 2, 3].map((i) => (
+                    <span
+                      key={i}
+                      className={`ml-strength-bar ${
+                        i < strength.score
+                          ? strength.score <= 1
+                            ? "bar-weak"
+                            : strength.score === 2
+                            ? "bar-medium"
+                            : "bar-strong"
+                          : ""
+                      }`}
+                    />
+                  ))}
                 </div>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-xs">
-              <label className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant" htmlFor="confirmPassword">
-                Konfirmasi Password
-              </label>
-              <div className="relative">
-                <span
-                  className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline dark:text-dark-outline"
-                  aria-hidden="true"
-                >
-                  lock_reset
+                <span aria-live="polite" className="ml-strength-label">
+                  {strength.label}
                 </span>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  placeholder="Samain kayak di atas"
-                  value={form.confirmPassword}
-                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                  className="w-full min-h-11 bg-surface-container-lowest dark:bg-dark-surface-container-lowest pl-10 pr-4 py-2 rounded-lg border border-outline-variant/50 dark:border-dark-outline-variant/50 focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all text-base text-on-surface dark:text-dark-on-background"
-                />
               </div>
+            )}
+
+            <label htmlFor="confirmPassword">KONFIRMASI PASSWORD</label>
+            <div className="ml-input-wrapper">
+              <span className="material-symbols-outlined ml-input-icon" aria-hidden="true">
+                lock_reset
+              </span>
+              <input
+                id="confirmPassword"
+                type="password"
+                required
+                autoComplete="new-password"
+                placeholder="Samain kayak di atas"
+                value={form.confirmPassword}
+                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+              />
             </div>
 
             {error && (
-              <p role="alert" className="flex items-start gap-xs text-body-sm text-danger dark:text-dark-danger">
+              <div role="alert" className="ml-error-alert">
                 <span className="material-symbols-outlined text-[16px] leading-5 shrink-0" aria-hidden="true">
                   error
                 </span>
-                {error}
-              </p>
+                <span>{error}</span>
+              </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-xs w-full min-h-11 bg-primary text-on-primary text-label-sm rounded-full flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 motion-safe:active:scale-95 transition-all shadow-lg shadow-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Memproses..." : "Buat Akun"}
+            <button className="ml-login-button" type="submit" disabled={loading}>
+              <span>{loading ? "Memproses..." : "Buat Akun"}</span>
             </button>
           </form>
-        </div>
 
-        <div className="flex items-center gap-3 my-xs">
-          <div className="flex-1 h-px bg-outline-variant/40 dark:bg-dark-outline-variant/40"></div>
-          <span className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant uppercase tracking-wider">
-            Atau daftar pake
-          </span>
-          <div className="flex-1 h-px bg-outline-variant/40 dark:bg-dark-outline-variant/40"></div>
-        </div>
+          <div className="ml-divider">
+            <span></span>
+            <em>ATAU DAFTAR PAKAI</em>
+            <span></span>
+          </div>
 
-        <div className="flex justify-center gap-3 mb-xs">
-          {SOCIAL_PROVIDERS.map((provider) => (
-            <button
-              key={provider.name}
-              type="button"
-              aria-label={`Daftar dengan ${provider.name}`}
-              className="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-lowest dark:bg-dark-surface-container-lowest border border-outline-variant/50 dark:border-dark-outline-variant/50 hover:bg-surface-container-low dark:hover:bg-dark-surface-container-low transition-colors shadow-sm"
-            >
-              <img src={provider.logo} alt={`${provider.name} logo`} className="w-full h-full object-cover" />
-            </button>
-          ))}
-        </div>
+          <div className="ml-social-login">
+            {SOCIAL_PROVIDERS.map((provider) => (
+              <button key={provider.name} type="button" aria-label={`Daftar dengan ${provider.name}`}>
+                <img src={provider.logo} alt={`${provider.name} logo`} className="w-5 h-5 object-contain" />
+              </button>
+            ))}
+          </div>
 
-        <div className="text-center flex justify-center gap-1">
-          <span className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant">Udah punya akun?</span>
-          <Link to="/login" className="text-body-sm font-semibold text-primary hover:underline">
-            Login aja
-          </Link>
+          <p className="ml-register-text">
+            Udah punya akun? <Link to="/login">Login aja</Link>
+          </p>
         </div>
       </main>
     </div>

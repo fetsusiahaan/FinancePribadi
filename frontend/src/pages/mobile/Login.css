@@ -43,28 +43,30 @@
   flex-direction: column;
   color: var(--text-main);
   background:
-    radial-gradient(circle at 50% 8%, rgba(167, 139, 250, 0.45) 0%, rgba(124, 58, 237, 0.18) 45%, transparent 75%),
+    radial-gradient(circle at 50% 12%, rgba(167, 139, 250, 0.5) 0%, rgba(124, 58, 237, 0.2) 45%, transparent 75%),
     linear-gradient(
       to bottom,
       #6a28d1 0%,
-      #8033ed 14%,
-      #a172ef 28%,
-      #cbb6fa 40%,
-      #ffffff 52%,
+      #7e31ea 14%,
+      #9b61f2 28%,
+      #c4b2fa 42%,
+      #e8dffc 54%,
+      #ffffff 68%,
       #ffffff 100%
     );
 }
 
 .dark .finora-login-mobile {
   background:
-    radial-gradient(circle at 50% 8%, rgba(155, 112, 237, 0.45) 0%, rgba(126, 48, 255, 0.25) 45%, transparent 75%),
+    radial-gradient(circle at 50% 12%, rgba(155, 112, 237, 0.5) 0%, rgba(126, 48, 255, 0.25) 45%, transparent 75%),
     linear-gradient(
       to bottom,
-      #1a0e33 0%,
-      #4a1f8f 14%,
-      #7540c7 28%,
-      #9b70ed 40%,
-      #120c1d 52%,
+      #180e2b 0%,
+      #2d1452 14%,
+      #3f1873 28%,
+      #2f1454 42%,
+      #1a0d33 54%,
+      #120c1d 68%,
       #120c1d 100%
     );
 }
@@ -363,6 +365,44 @@
   text-align: center;
   color: var(--text-muted);
   font-size: 13px;
+}
+
+.ml-password-strength {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ml-strength-bars {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+}
+
+.ml-strength-bar {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  background: var(--border-input);
+}
+
+.ml-strength-bar.bar-weak {
+  background: #ef4444;
+}
+
+.ml-strength-bar.bar-medium {
+  background: #f59e0b;
+}
+
+.ml-strength-bar.bar-strong {
+  background: #10b981;
+}
+
+.ml-strength-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 /* Ilustrasi finance mockup — sama komposisi dgn desktop, disederhanakan proporsi. */
