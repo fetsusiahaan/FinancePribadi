@@ -72,24 +72,3 @@
   word-wrap: normal;
   direction: ltr;
 }
-
-.glass-panel {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-}
-
-.dark .glass-panel {
-  background: rgba(19, 27, 46, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.hero-bg {
-  background: radial-gradient(circle at top right, theme('colors.surface-container-high'), theme('colors.surface-container-lowest'));
-}
-
-.dark .hero-bg {
-  background: radial-gradient(circle at top right, theme('colors.dark-surface-container-high'), theme('colors.dark-surface-container-lowest'));
-}

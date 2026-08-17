@@ -32,48 +32,47 @@ export function Login() {
   }
 
   return (
-    <div className="bg-surface-container-lowest dark:bg-dark-background text-on-background dark:text-dark-on-background antialiased min-h-dvh flex flex-col items-center">
-      {/* Header transparan di atas gambar hero — background hanya muncul saat konten
-          discroll ke belakangnya, supaya gambar terasa full-bleed, bukan terpotong kartu. */}
-      <header className="w-full fixed top-0 left-0 flex items-center justify-between px-md py-md z-10">
-        <span
-          className="material-symbols-outlined text-white drop-shadow-md"
-          style={{ fontVariationSettings: '"FILL" 1' }}
-          aria-hidden="true"
-        >
-          account_balance_wallet
-        </span>
-        <h1 className="font-bold text-xl text-white tracking-tight drop-shadow-md">Finora AI</h1>
-        <ThemeToggle className="!border-white/40 !text-white hover:!bg-white/10" />
-      </header>
-
-      {/* Hero full-bleed: lebar penuh viewport, tinggi menyesuaikan lewat aspect-ratio.
-          Di 640-767px (tablet kecil/phablet, masih dapat versi mobile ini karena di
-          bawah breakpoint md:768px) rasio dibuat lebih landscape (sm:aspect-[16/9])
-          supaya gambar tidak menjulang tinggi di viewport yang jauh lebih lebar. */}
-      <div className="relative w-full aspect-square sm:aspect-[16/9] shrink-0 overflow-hidden">
+    <div className="bg-surface-container-lowest dark:bg-dark-background text-on-background dark:text-dark-on-background antialiased h-dvh w-full overflow-hidden flex flex-col items-center relative">
+      {/* Hero full-bleed ditempatkan di paling atas (top-0) */}
+      <div className="w-full h-[clamp(140px,32dvh,320px)] shrink-0 overflow-hidden relative">
         <img
           src="/images/login-hero.png"
           alt="Ilustrasi kartu AI Finance terhubung dengan grafik pertumbuhan finansial"
           className="w-full h-full object-cover"
         />
         <div
-          className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest dark:from-dark-background via-transparent to-black/10"
+          className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-surface-container-lowest dark:to-dark-background"
           aria-hidden="true"
         />
       </div>
 
-      {/* max-w-md (448px) -> sm:max-w-lg (512px): form sedikit lebih lega di
-          640-767px, bukan melebar penuh mengikuti viewport yang jauh lebih lebar. */}
-      <main className="w-full max-w-md sm:max-w-lg px-md py-xs pb-md -mt-8 relative flex flex-col">
-        <div className="mb-xs text-center">
+      {/* Header melayang transparan di atas hero */}
+      <header className="absolute top-0 left-0 right-0 w-full shrink-0 flex items-center justify-between px-md py-sm z-20">
+        <div className="flex items-center gap-2">
+          <span
+            className="material-symbols-outlined text-white drop-shadow-md"
+            style={{ fontVariationSettings: '"FILL" 1' }}
+            aria-hidden="true"
+          >
+            account_balance_wallet
+          </span>
+          <h1 className="font-bold text-lg text-white tracking-tight drop-shadow-md">Finora AI</h1>
+        </div>
+        <ThemeToggle className="!border-white/40 !text-white hover:!bg-white/10" />
+      </header>
+
+      {/* flex-1 min-h-0: main mengisi sisa tinggi viewport persis (bukan
+          tinggi konten alami), sehingga total halaman selalu pas satu layar
+          mengikuti panjang layar device — tanpa scroll dokumen. */}
+      <main className="w-full max-w-md sm:max-w-lg px-md pb-sm -mt-6 relative z-10 flex-1 min-h-0 flex flex-col justify-center overflow-y-auto">
+        <div className="mb-xs text-center shrink-0">
           <h2 className="text-lg font-semibold text-on-background dark:text-dark-on-background mb-xs">Masuk Dulu, Bos!</h2>
           <p className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant">
             Lanjut pantau cuan dan investasi kamu hari ini.
           </p>
         </div>
 
-        <div className="bg-surface-container-lowest dark:bg-dark-surface-container-lowest rounded-xl border border-outline-variant/40 dark:border-dark-outline-variant/40 shadow-sm p-sm">
+        <div className="shrink-0 bg-surface-container-lowest dark:bg-dark-surface-container-lowest rounded-xl border border-outline-variant/40 dark:border-dark-outline-variant/40 shadow-sm p-sm">
           <form onSubmit={handleSubmit} className="flex flex-col gap-xs">
             <div className="flex flex-col gap-xs">
               <label className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant" htmlFor="email">
