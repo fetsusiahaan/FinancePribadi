@@ -11,7 +11,8 @@ import { ErrorState } from "../../components/ui/ErrorState";
 import { MonthPicker } from "../../components/ui/MonthPicker";
 import { getBudgets, createBudget, updateBudget, deleteBudget } from "../../services/budget.service";
 import { getCategories } from "../../services/category.service";
-import { formatIDR, currentMonthValue, formatThousands, stripThousands } from "../../utils/format";
+import { currentMonthValue, formatThousands, stripThousands } from "../../utils/format";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 // Setiap status membawa ikon, bukan hanya warna — supaya tetap terbaca
 // oleh pengguna buta warna dan pembaca layar.
@@ -130,6 +131,7 @@ function BudgetForm({ initial, month, existingCategoryIds, onSubmit, onCancel, s
 }
 
 export function Budgets() {
+  const { formatMoney } = useCurrency();
   const queryClient = useQueryClient();
   const [month, setMonth] = useState(currentMonthValue);
   const [modal, setModal] = useState(null);
@@ -202,13 +204,13 @@ export function Budgets() {
               <p className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant">Total terpakai</p>
             </div>
             <p className="tnum text-xl font-semibold">
-              {formatIDR(summary.total_spent)}{" "}
+              {formatMoney(summary.total_spent)}{" "}
               <span className="text-body-sm font-normal text-on-surface-variant dark:text-dark-on-surface-variant">
-                dari {formatIDR(summary.total_limit)}
+                dari {formatMoney(summary.total_limit)}
               </span>
             </p>
             <p className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant mt-xs">
-              Sisa <strong className="tnum text-on-background dark:text-dark-on-background">{formatIDR(summary.total_remaining)}</strong>
+              Sisa <strong className="tnum text-on-background dark:text-dark-on-background">{formatMoney(summary.total_remaining)}</strong>
             </p>
             <div
               role="progressbar"
@@ -267,7 +269,7 @@ export function Budgets() {
                   </div>
 
                   <p className="tnum text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant">
-                    {formatIDR(budget.spent)} / {formatIDR(budget.amount_limit)}
+                    {formatMoney(budget.spent)} / {formatMoney(budget.amount_limit)}
                   </p>
 
                   {/* Aksi di baris bawah kartu, konsisten dgn mobile/Transactions.jsx —

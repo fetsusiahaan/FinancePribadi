@@ -19,6 +19,7 @@ export function toDto(user) {
     profession: user.profession,
     income_range: user.incomeRange === null ? null : Number(user.incomeRange),
     risk_profile: user.riskProfile,
+    preferred_currency: user.preferredCurrency,
     financial_score: user.financialScore,
     created_at: user.createdAt,
   };
@@ -37,6 +38,7 @@ export async function updateMe(userId, payload) {
   if (payload.profession !== undefined) data.profession = payload.profession || null;
   if (payload.income_range !== undefined) data.incomeRange = payload.income_range;
   if (payload.risk_profile !== undefined) data.riskProfile = payload.risk_profile || null;
+  if (payload.preferred_currency !== undefined) data.preferredCurrency = payload.preferred_currency;
 
   const user = await userRepository.update(userId, data);
   return toDto(user);

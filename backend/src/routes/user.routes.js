@@ -17,6 +17,7 @@ router.patch(
     body("profession").optional({ nullable: true }).isString(),
     body("income_range").optional({ nullable: true }).isFloat({ min: 0 }).withMessage("Income range must be >= 0"),
     body("risk_profile").optional({ nullable: true }).isString(),
+    body("preferred_currency").optional().isIn(["IDR", "USD"]).withMessage("Preferred currency must be IDR or USD"),
   ],
   updateMe
 );

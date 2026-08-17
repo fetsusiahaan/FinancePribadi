@@ -10,9 +10,10 @@ import { Modal } from "../../components/ui/Modal";
 import { ThemeToggle } from "../../components/ui/ThemeToggle";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMe, updateMe, changePassword, exportMyData, deleteMe } from "../../services/user.service";
-import { formatIDR, formatThousands, stripThousands } from "../../utils/format";
+import { formatThousands, stripThousands } from "../../utils/format";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
-const APP_VERSION = "0.1.0";
+const APP_VERSION = "1.1.0";
 
 function initials(name) {
   if (!name) return "?";
@@ -77,7 +78,7 @@ function ComingSoonRow({ icon, label }) {
         {icon}
       </span>
       <p className="flex-1 min-w-0 text-body-sm font-medium truncate">{label}</p>
-      <span className="text-[11px] px-xs py-[1px] rounded bg-surface-container dark:bg-dark-surface-container text-on-surface-variant dark:text-dark-on-surface-variant whitespace-nowrap">
+      <span className="text-[11px] px-xs py-[1px] rounded bg-warning/15 dark:bg-dark-warning/20 text-warning dark:text-dark-warning whitespace-nowrap">
         Segera hadir
       </span>
     </div>
@@ -340,6 +341,7 @@ export function Profile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { logout, replaceToken } = useAuth();
+  const { formatMoney, currency, rateLoading, setCurrency, settingCurrency } = useCurrency();
   const [modal, setModal] = useState(null);
   const [formError, setFormError] = useState(null);
   const [passwordNotice, setPasswordNotice] = useState(null);
@@ -415,7 +417,7 @@ export function Profile() {
   }
 
   return (
-    <DashboardLayout title="Profile">
+    <DashboardLayout title="Profil">
       {isLoading && (
         <>
           <p className="sr-only" role="status">
@@ -463,7 +465,7 @@ export function Profile() {
               label="Pendapatan & Sumber"
               value={
                 user.income_range
-                  ? `${formatIDR(user.income_range)}${user.profession ? " · " + user.profession : ""}`
+                  ? `${formatMoney(user.income_range)}${user.profession ? " · " + user.profession : ""}`
                   : "Belum diisi"
               }
               action={
@@ -473,7 +475,6 @@ export function Profile() {
               }
             />
             <ComingSoonRow icon="event" label="Tanggal Gajian" />
-            <ComingSoonRow icon="currency_exchange" label="Mata Uang" />
           </SectionCard>
 
           <SectionCard icon="flag" title="Target Keuangan">
@@ -546,7 +547,32 @@ export function Profile() {
           <SectionCard icon="settings" title="Pengaturan">
             <SettingRow icon="dark_mode" label="Tema" action={<ThemeToggle />} />
             <ComingSoonRow icon="language" label="Bahasa" />
-            <ComingSoonRow icon="currency_exchange" label="Mata Uang" />
+            <SettingRow
+              icon="currency_exchange"
+              label="Mata Uang"
+              value={rateLoading && currency === "USD" ? "Memuat kurs..." : undefined}
+              action={
+                <div role="radiogroup" aria-label="Pilih mata uang" className="flex gap-[3px]">
+                  {["IDR", "USD"].map((code) => (
+                    <button
+                      key={code}
+                      type="button"
+                      role="radio"
+                      aria-checked={currency === code}
+                      disabled={settingCurrency}
+                      onClick={() => setCurrency(code)}
+                      className={`min-h-8 px-sm rounded-md text-[12px] font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 disabled:cursor-not-allowed ${
+                        currency === code
+                          ? "bg-primary text-on-primary"
+                          : "border border-outline-variant dark:border-dark-outline-variant text-on-surface-variant dark:text-dark-on-surface-variant hover:bg-surface-container dark:hover:bg-dark-surface-container"
+                      }`}
+                    >
+                      {code}
+                    </button>
+                  ))}
+                </div>
+              }
+            />
             <SettingRow icon="info" label="Tentang Aplikasi" value={`Finora AI v${APP_VERSION}`} />
             <SettingRow
               icon="logout"

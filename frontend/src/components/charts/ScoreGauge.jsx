@@ -65,7 +65,7 @@ export function ScoreGauge({ score, label, size = 120 }) {
           className="uppercase tracking-wider leading-tight text-center text-[var(--gauge)] dark:text-[var(--gauge-dark)]"
           style={{ fontSize: labelFontSize }}
         >
-          {label}
+          {LABEL_ID[label] || label}
         </span>
       </div>
     </div>

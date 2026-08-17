@@ -278,7 +278,7 @@ export function Register() {
 
           <div className="absolute bottom-lg md:bottom-xl right-lg md:right-xl z-20 glass-panel p-md rounded-lg">
             <h3 className="font-semibold text-on-background dark:text-dark-on-background">Finora AI</h3>
-            <p className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant">Empowering your future.</p>
+            <p className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant">Wujudkan masa depan finansialmu.</p>
           </div>
         </section>
       </main>

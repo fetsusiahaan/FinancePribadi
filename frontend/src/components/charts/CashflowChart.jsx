@@ -1,7 +1,9 @@
-import { formatCompactIDR, formatIDR, formatMonthLabel } from "../../utils/format";
+import { formatMonthLabel } from "../../utils/format";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 /** Bar chart income vs expense per bulan (PRD §Dashboard Layout: Cash Flow). */
 export function CashflowChart({ data }) {
+  const { formatMoney } = useCurrency();
   if (!data || data.length === 0) {
     return (
       <p className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant">
@@ -21,14 +23,14 @@ export function CashflowChart({ data }) {
               <div
                 className="w-1/3 min-h-[2px] bg-success dark:bg-dark-success rounded-t"
                 style={{ height: `${(point.income / max) * 100}%` }}
-                title={`Pemasukan ${formatCompactIDR(point.income)}`}
+                title={`Pemasukan ${formatMoney(point.income)}`}
               />
               {/* Pengeluaran dibedakan warna DAN pola garis, supaya tetap
                   terbaca tanpa membedakan warna. */}
               <div
                 className="w-1/3 min-h-[2px] bg-danger dark:bg-dark-danger rounded-t bg-[repeating-linear-gradient(45deg,transparent,transparent_3px,rgba(255,255,255,0.35)_3px,rgba(255,255,255,0.35)_6px)]"
                 style={{ height: `${(point.expense / max) * 100}%` }}
-                title={`Pengeluaran ${formatCompactIDR(point.expense)}`}
+                title={`Pengeluaran ${formatMoney(point.expense)}`}
               />
             </div>
             <span className="tnum text-[11px] text-on-surface-variant dark:text-dark-on-surface-variant">
@@ -78,8 +80,8 @@ export function CashflowChart({ data }) {
                 <th scope="row" className="text-left font-normal py-xs">
                   {formatMonthLabel(point.month)}
                 </th>
-                <td className="tnum text-right py-xs">{formatIDR(point.income)}</td>
-                <td className="tnum text-right py-xs">{formatIDR(point.expense)}</td>
+                <td className="tnum text-right py-xs">{formatMoney(point.income)}</td>
+                <td className="tnum text-right py-xs">{formatMoney(point.expense)}</td>
               </tr>
             ))}
           </tbody>
