@@ -33,19 +33,39 @@ export function Login() {
 
   return (
     <div className="bg-surface-container-lowest dark:bg-dark-background text-on-background dark:text-dark-on-background antialiased min-h-dvh flex flex-col items-center">
-      <header className="bg-surface-container-lowest/90 dark:bg-dark-background/90 backdrop-blur-sm w-full fixed top-0 left-0 flex items-center justify-between px-md py-md z-10">
-        <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: '"FILL" 1' }}>
+      {/* Header transparan di atas gambar hero — background hanya muncul saat konten
+          discroll ke belakangnya, supaya gambar terasa full-bleed, bukan terpotong kartu. */}
+      <header className="w-full fixed top-0 left-0 flex items-center justify-between px-md py-md z-10">
+        <span
+          className="material-symbols-outlined text-white drop-shadow-md"
+          style={{ fontVariationSettings: '"FILL" 1' }}
+          aria-hidden="true"
+        >
           account_balance_wallet
         </span>
-        <h1 className="font-bold text-xl text-primary tracking-tight">Finora AI</h1>
-        <ThemeToggle />
+        <h1 className="font-bold text-xl text-white tracking-tight drop-shadow-md">Finora AI</h1>
+        <ThemeToggle className="!border-white/40 !text-white hover:!bg-white/10" />
       </header>
 
-      <main className="w-full max-w-md px-md py-xs pt-20 pb-md flex flex-col">
-        <div className="w-full flex justify-center mb-xs rounded-xl overflow-hidden shadow-lg shadow-primary/5 bg-surface-container dark:bg-dark-surface-container border border-outline-variant/30 dark:border-dark-outline-variant/30">
-          <img src="/images/login-hero.png" alt="" className="w-full h-20 object-cover opacity-90" />
-        </div>
+      {/* Hero full-bleed: lebar penuh viewport, tinggi menyesuaikan lewat aspect-ratio.
+          Di 640-767px (tablet kecil/phablet, masih dapat versi mobile ini karena di
+          bawah breakpoint md:768px) rasio dibuat lebih landscape (sm:aspect-[16/9])
+          supaya gambar tidak menjulang tinggi di viewport yang jauh lebih lebar. */}
+      <div className="relative w-full aspect-square sm:aspect-[16/9] shrink-0 overflow-hidden">
+        <img
+          src="/images/login-hero.png"
+          alt="Ilustrasi kartu AI Finance terhubung dengan grafik pertumbuhan finansial"
+          className="w-full h-full object-cover"
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest dark:from-dark-background via-transparent to-black/10"
+          aria-hidden="true"
+        />
+      </div>
 
+      {/* max-w-md (448px) -> sm:max-w-lg (512px): form sedikit lebih lega di
+          640-767px, bukan melebar penuh mengikuti viewport yang jauh lebih lebar. */}
+      <main className="w-full max-w-md sm:max-w-lg px-md py-xs pb-md -mt-8 relative flex flex-col">
         <div className="mb-xs text-center">
           <h2 className="text-lg font-semibold text-on-background dark:text-dark-on-background mb-xs">Masuk Dulu, Bos!</h2>
           <p className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant">
@@ -60,7 +80,10 @@ export function Login() {
                 Email Address
               </label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline dark:text-dark-outline">
+                <span
+                  className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline dark:text-dark-outline"
+                  aria-hidden="true"
+                >
                   mail
                 </span>
                 <input
@@ -71,7 +94,7 @@ export function Login() {
                   placeholder="bos@example.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full bg-surface-container-lowest dark:bg-dark-surface-container-lowest pl-10 pr-4 py-2 rounded-lg border border-outline-variant/50 dark:border-dark-outline-variant/50 focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all text-body-sm text-on-surface dark:text-dark-on-background placeholder:text-outline-variant dark:placeholder:text-dark-outline-variant"
+                  className="w-full min-h-11 bg-surface-container-lowest dark:bg-dark-surface-container-lowest pl-10 pr-4 py-2 rounded-lg border border-outline-variant/50 dark:border-dark-outline-variant/50 focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all text-base text-on-surface dark:text-dark-on-background placeholder:text-outline-variant dark:placeholder:text-dark-outline-variant"
                 />
               </div>
             </div>
@@ -81,7 +104,10 @@ export function Login() {
                 Password
               </label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline dark:text-dark-outline">
+                <span
+                  className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline dark:text-dark-outline"
+                  aria-hidden="true"
+                >
                   lock
                 </span>
                 <input
@@ -108,12 +134,19 @@ export function Login() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between mt-xs">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="rounded border-outline-variant dark:border-dark-outline-variant text-primary focus:ring-primary/50 w-4 h-4 bg-surface-container-lowest dark:bg-dark-surface-container-lowest" />
+            <div className="flex items-center justify-between mt-xs -ml-2">
+              {/* min-h-11 pada label memperluas area sentuh checkbox yang secara visual kecil. */}
+              <label className="flex items-center gap-2 min-h-11 px-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="rounded border-outline-variant dark:border-dark-outline-variant text-primary focus:ring-primary/50 w-4 h-4 bg-surface-container-lowest dark:bg-dark-surface-container-lowest"
+                />
                 <span className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant">Remember Me</span>
               </label>
-              <a href="#" className="text-label-sm text-primary font-semibold hover:underline">
+              <a
+                href="#"
+                className="inline-flex items-center min-h-11 px-2 -mr-2 text-label-sm text-primary font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md"
+              >
                 Lupa Password?
               </a>
             </div>

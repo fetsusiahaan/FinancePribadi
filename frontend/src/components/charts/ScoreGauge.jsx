@@ -22,6 +22,10 @@ export function ScoreGauge({ score, label, size = 120 }) {
   const clamped = Math.min(100, Math.max(0, score));
   const progress = (clamped / 100) * circumference;
   const tone = LABEL_COLOR[label] || LABEL_COLOR.Excellent;
+  // Label seperti "EXCELLENT" lebih lebar dari lingkaran kecil — skala ke ukuran
+  // gauge supaya tidak meluber (mis. size=96 di mobile) tanpa mengubah tampilan default.
+  const scoreFontSize = Math.max(14, Math.round(size * 0.2));
+  const labelFontSize = Math.max(7, Math.round(size * 0.09));
 
   return (
     <div
@@ -50,11 +54,17 @@ export function ScoreGauge({ score, label, size = 120 }) {
           className="stroke-[var(--gauge)] dark:stroke-[var(--gauge-dark)]"
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center" aria-hidden="true">
-        <span className="tnum text-2xl font-semibold text-on-background dark:text-dark-on-background">
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-xs" aria-hidden="true">
+        <span
+          className="tnum font-semibold leading-tight text-on-background dark:text-dark-on-background"
+          style={{ fontSize: scoreFontSize }}
+        >
           {clamped}
         </span>
-        <span className="text-[11px] uppercase tracking-wider text-[var(--gauge)] dark:text-[var(--gauge-dark)]">
+        <span
+          className="uppercase tracking-wider leading-tight text-center text-[var(--gauge)] dark:text-[var(--gauge-dark)]"
+          style={{ fontSize: labelFontSize }}
+        >
           {label}
         </span>
       </div>

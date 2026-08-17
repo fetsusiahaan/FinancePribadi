@@ -23,8 +23,16 @@ export function AuthProvider({ children }) {
     setToken(null);
   }
 
+  // Dipakai setelah ganti password: token lama diganti tanpa memaksa logout.
+  function replaceToken(nextToken) {
+    localStorage.setItem("token", nextToken);
+    setToken(nextToken);
+  }
+
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ token, isAuthenticated: !!token, login, register, logout, replaceToken }}
+    >
       {children}
     </AuthContext.Provider>
   );

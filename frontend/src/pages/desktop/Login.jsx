@@ -29,7 +29,11 @@ export function Login() {
     <div className="bg-surface-container-lowest dark:bg-dark-background text-on-background dark:text-dark-on-background antialiased h-dvh overflow-hidden flex">
       <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-gutter py-md bg-surface-container-lowest dark:bg-dark-surface-container-lowest shadow-sm">
         <div className="flex items-center gap-sm">
-          <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: '"FILL" 1' }}>
+          <span
+            className="material-symbols-outlined text-primary text-3xl"
+            style={{ fontVariationSettings: '"FILL" 1' }}
+            aria-hidden="true"
+          >
             hive
           </span>
           <span className="font-semibold text-xl text-on-background dark:text-dark-on-background tracking-tight">Finora AI</span>
@@ -56,7 +60,10 @@ export function Login() {
                   Email Address
                 </label>
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]">
+                  <span
+                    className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]"
+                    aria-hidden="true"
+                  >
                     mail
                   </span>
                   <input
@@ -67,7 +74,7 @@ export function Login() {
                     placeholder="contoh@email.com"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full pl-xl pr-md py-[8px] bg-surface-container-lowest dark:bg-dark-surface-container-lowest border border-outline-variant dark:border-dark-outline-variant rounded-lg text-on-background dark:text-dark-on-background focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all placeholder:text-outline dark:placeholder:text-dark-outline text-body-sm"
+                    className="w-full min-h-11 pl-xl pr-md py-[8px] bg-surface-container-lowest dark:bg-dark-surface-container-lowest border border-outline-variant dark:border-dark-outline-variant rounded-lg text-on-background dark:text-dark-on-background focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all placeholder:text-outline dark:placeholder:text-dark-outline text-body-sm"
                   />
                 </div>
               </div>
@@ -77,7 +84,10 @@ export function Login() {
                   Password
                 </label>
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]">
+                  <span
+                    className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline-variant dark:text-dark-outline-variant text-[20px]"
+                    aria-hidden="true"
+                  >
                     lock
                   </span>
                   <input
@@ -104,14 +114,21 @@ export function Login() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-sm cursor-pointer group">
-                  <input type="checkbox" className="w-4 h-4 rounded border-outline-variant dark:border-dark-outline-variant text-primary focus:ring-primary/50 cursor-pointer" />
+              <div className="flex items-center justify-between -ml-2">
+                {/* min-h-11 pada label memperluas area sentuh checkbox yang secara visual kecil. */}
+                <label className="flex items-center gap-sm min-h-11 px-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded border-outline-variant dark:border-dark-outline-variant text-primary focus:ring-primary/50 cursor-pointer"
+                  />
                   <span className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant group-hover:text-on-background dark:group-hover:text-dark-on-background transition-colors">
                     Remember Me
                   </span>
                 </label>
-                <a href="#" className="text-body-sm text-primary hover:text-primary-container font-medium transition-colors hover:underline underline-offset-4">
+                <a
+                  href="#"
+                  className="inline-flex items-center min-h-11 px-2 -mr-2 text-body-sm text-primary hover:text-primary-container font-medium transition-colors hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md"
+                >
                   Lupa Password?
                 </a>
               </div>

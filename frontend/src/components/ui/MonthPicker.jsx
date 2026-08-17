@@ -11,10 +11,10 @@ const NAV_BUTTON =
 
 export function MonthPicker({ value, onChange }) {
   return (
-    <div
+   <div
       role="group"
       aria-label="Pilih bulan"
-      className="flex items-center gap-xs bg-surface-container dark:bg-dark-surface-container rounded-lg px-xs"
+      className="inline-flex w-fit items-center gap-xs bg-surface-container dark:bg-dark-surface-container rounded-lg px-xs"
     >
       <button
         type="button"
