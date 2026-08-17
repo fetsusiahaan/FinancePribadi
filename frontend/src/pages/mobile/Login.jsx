@@ -77,7 +77,7 @@ export function Login() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-xs">
             <div className="flex flex-col gap-xs">
               <label className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant" htmlFor="email">
-                Email Address
+                Alamat Email
               </label>
               <div className="relative">
                 <span
@@ -141,7 +141,7 @@ export function Login() {
                   type="checkbox"
                   className="rounded border-outline-variant dark:border-dark-outline-variant text-primary focus:ring-primary/50 w-4 h-4 bg-surface-container-lowest dark:bg-dark-surface-container-lowest"
                 />
-                <span className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant">Remember Me</span>
+                <span className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant">Ingat Saya</span>
               </label>
               <a
                 href="#"

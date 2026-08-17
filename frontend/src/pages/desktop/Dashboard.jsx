@@ -10,7 +10,8 @@ import { DonutChart } from "../../components/charts/DonutChart";
 import { CashflowChart } from "../../components/charts/CashflowChart";
 import { ScoreGauge } from "../../components/charts/ScoreGauge";
 import { getSummary, getCashflow } from "../../services/dashboard.service";
-import { formatIDR, formatDate, currentMonthValue } from "../../utils/format";
+import { formatDate, currentMonthValue, formatIDR } from "../../utils/format";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 const STATUS_STYLE = {
   WARNING: {
@@ -24,13 +25,14 @@ const STATUS_STYLE = {
 };
 
 const SCORE_LABELS = {
-  savings_rate: "Savings Rate",
-  expense_control: "Expense Control",
-  budget_discipline: "Budget Discipline",
-  income_stability: "Income Stability",
+  savings_rate: "Rasio Tabungan",
+  expense_control: "Kontrol Pengeluaran",
+  budget_discipline: "Disiplin Anggaran",
+  income_stability: "Stabilitas Pendapatan",
 };
 
 function StatCard({ label, value, icon, tone = "default" }) {
+  const { formatMoney, currency, rate } = useCurrency();
   const tones = {
     default: "text-on-background dark:text-dark-on-background",
     income: "text-success dark:text-dark-success",
@@ -44,7 +46,12 @@ function StatCard({ label, value, icon, tone = "default" }) {
         </span>
         <p className="text-body-sm">{label}</p>
       </div>
-      <p className={`tnum text-xl font-semibold ${tones[tone]}`}>{formatIDR(value)}</p>
+      <p className={`tnum text-xl font-semibold ${tones[tone]}`}>{formatMoney(value)}</p>
+      {currency === "USD" && rate && (
+        <p className="tnum text-[11px] text-on-surface-variant dark:text-dark-on-surface-variant mt-[2px]">
+          1 USD = {formatIDR(rate)}
+        </p>
+      )}
     </Card>
   );
 }
@@ -68,6 +75,7 @@ function DashboardSkeleton() {
 }
 
 export function Dashboard() {
+  const { formatMoney } = useCurrency();
   const [month, setMonth] = useState(currentMonthValue);
 
   const summaryQuery = useQuery({
@@ -128,8 +136,8 @@ export function Dashboard() {
                     <span className="flex-1">
                       Budget <strong>{alert.category?.name}</strong> terpakai{" "}
                       <span className="tnum">{alert.percentage}%</span> (
-                      <span className="tnum">{formatIDR(alert.spent)}</span> dari{" "}
-                      <span className="tnum">{formatIDR(alert.amount_limit)}</span>)
+                      <span className="tnum">{formatMoney(alert.spent)}</span> dari{" "}
+                      <span className="tnum">{formatMoney(alert.amount_limit)}</span>)
                     </span>
                     <Link
                       to="/budgets"
@@ -147,7 +155,7 @@ export function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-md">
             {/* Financial Health Score */}
             <Card className="p-md">
-              <h2 className="text-lg font-semibold mb-md">Financial Health Score</h2>
+              <h2 className="text-lg font-semibold mb-md">Skor Kesehatan Finansial</h2>
               <div className="flex items-center gap-md">
                 <ScoreGauge score={data.financial_score} label={data.financial_score_label} />
                 <ul className="flex-1 space-y-xs text-body-sm">
@@ -165,7 +173,7 @@ export function Dashboard() {
 
             {/* Cash Flow */}
             <Card className="p-md lg:col-span-2">
-              <h2 className="text-lg font-semibold mb-md">Cash Flow 6 Bulan</h2>
+              <h2 className="text-lg font-semibold mb-md">Arus Kas 6 Bulan</h2>
               {cashflowQuery.isLoading && (
                 <div
                   className="h-40 rounded-lg bg-surface-container dark:bg-dark-surface-container motion-safe:animate-pulse"
@@ -233,7 +241,7 @@ export function Dashboard() {
                         }`}
                       >
                         {tx.category?.type === "INCOME" ? "+" : "-"}
-                        {formatIDR(tx.amount)}
+                        {formatMoney(tx.amount)}
                       </span>
                     </li>
                   ))}

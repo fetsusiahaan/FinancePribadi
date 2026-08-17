@@ -10,7 +10,8 @@ import { DonutChart } from "../../components/charts/DonutChart";
 import { CashflowChart } from "../../components/charts/CashflowChart";
 import { ScoreGauge } from "../../components/charts/ScoreGauge";
 import { getSummary, getCashflow } from "../../services/dashboard.service";
-import { formatIDR, formatDate, currentMonthValue } from "../../utils/format";
+import { formatDate, currentMonthValue, formatIDR } from "../../utils/format";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 const STATUS_STYLE = {
   WARNING: {
@@ -24,16 +25,17 @@ const STATUS_STYLE = {
 };
 
 const SCORE_LABELS = {
-  savings_rate: "Savings Rate",
-  expense_control: "Expense Control",
-  budget_discipline: "Budget Discipline",
-  income_stability: "Income Stability",
+  savings_rate: "Rasio Tabungan",
+  expense_control: "Kontrol Pengeluaran",
+  budget_discipline: "Disiplin Anggaran",
+  income_stability: "Stabilitas Pendapatan",
 };
 
 // Saldo jadi hero — kartu gradien besar yang menarik perhatian pertama kali,
 // bukan sejajar dengan Pemasukan/Pengeluaran (§visual-hierarchy: ukuran & kontras,
 // bukan warna saja, yang membedakan info paling penting).
 function BalanceHero({ value }) {
+  const { formatMoney, currency, rate } = useCurrency();
   return (
     <Card className="p-lg relative overflow-hidden border-none bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-lg shadow-primary/25">
       <span
@@ -43,7 +45,10 @@ function BalanceHero({ value }) {
         account_balance_wallet
       </span>
       <p className="relative text-body-sm text-white/85">Saldo Bulan Ini</p>
-      <p className="relative tnum text-3xl font-bold mt-xs">{formatIDR(value)}</p>
+      <p className="relative tnum text-3xl font-bold mt-xs">{formatMoney(value)}</p>
+      {currency === "USD" && rate && (
+        <p className="relative tnum text-[11px] text-white/70 mt-[2px]">1 USD = {formatIDR(rate)}</p>
+      )}
     </Card>
   );
 }
@@ -51,6 +56,7 @@ function BalanceHero({ value }) {
 // Kartu pastel penuh (gaya FundFlex) untuk Pemasukan/Pengeluaran — latar warna
 // solid tone-appropriate (bukan /10 opacity tipis), lebih besar dari chip lama.
 function ActionCard({ label, value, icon, tone }) {
+  const { formatMoney } = useCurrency();
   const tones = {
     income: "bg-primary-container/25 dark:bg-primary/15 text-primary dark:text-primary-container",
     expense: "bg-danger-container/70 dark:bg-dark-danger/15 text-danger dark:text-dark-danger",
@@ -61,7 +67,7 @@ function ActionCard({ label, value, icon, tone }) {
         {icon}
       </span>
       <p className="text-label-sm mt-sm">{label}</p>
-      <p className="tnum text-body-sm font-semibold truncate">{formatIDR(value)}</p>
+      <p className="tnum text-body-sm font-semibold truncate">{formatMoney(value)}</p>
     </div>
   );
 }
@@ -86,7 +92,7 @@ function GoalsPromoCard() {
           Kendalikan pengeluaran dan capai targetmu.
         </p>
       </div>
-      <span className="text-[11px] px-xs py-[1px] rounded bg-surface-container-lowest dark:bg-dark-surface-container-lowest text-on-surface-variant dark:text-dark-on-surface-variant whitespace-nowrap shrink-0">
+      <span className="text-[11px] px-xs py-[1px] rounded bg-warning/15 dark:bg-dark-warning/20 text-warning dark:text-dark-warning whitespace-nowrap shrink-0">
         Segera hadir
       </span>
     </div>
@@ -112,6 +118,7 @@ function DashboardSkeleton() {
 }
 
 export function Dashboard() {
+  const { formatMoney } = useCurrency();
   const [month, setMonth] = useState(currentMonthValue);
 
   const summaryQuery = useQuery({
@@ -198,8 +205,8 @@ export function Dashboard() {
                           <span className="tnum">{alert.percentage}%</span>
                         </p>
                         <p>
-                          <span className="tnum">{formatIDR(alert.spent)}</span> dari{" "}
-                          <span className="tnum">{formatIDR(alert.amount_limit)}</span>
+                          <span className="tnum">{formatMoney(alert.spent)}</span> dari{" "}
+                          <span className="tnum">{formatMoney(alert.amount_limit)}</span>
                         </p>
                       </div>
                     </div>
@@ -230,7 +237,7 @@ export function Dashboard() {
                   monitor_heart
                 </span>
               </span>
-              <h2 className="text-lg font-semibold">Financial Health Score</h2>
+              <h2 className="text-lg font-semibold">Skor Kesehatan Finansial</h2>
             </div>
             <div className="flex items-center gap-md">
               <ScoreGauge score={data.financial_score} label={data.financial_score_label} size={96} />
@@ -255,7 +262,7 @@ export function Dashboard() {
                   bar_chart
                 </span>
               </span>
-              <h2 className="text-lg font-semibold">Cash Flow 6 Bulan</h2>
+              <h2 className="text-lg font-semibold">Arus Kas 6 Bulan</h2>
             </div>
             {cashflowQuery.isLoading && (
               <div
@@ -333,7 +340,7 @@ export function Dashboard() {
                       }`}
                     >
                       {tx.category?.type === "INCOME" ? "+" : "-"}
-                      {formatIDR(tx.amount)}
+                      {formatMoney(tx.amount)}
                     </span>
                   </li>
                 ))}

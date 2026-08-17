@@ -1,4 +1,4 @@
-import { formatIDR } from "../../utils/format";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 // Palet kategorikal: urutan dipilih supaya warna bertetangga tetap berbeda
 // dalam nilai (value), bukan hanya rona (hue) — aman untuk buta warna.
@@ -6,6 +6,7 @@ const PALETTE = ["#2563eb", "#10b981", "#a855f7", "#c2410c", "#0891b2", "#be185d
 
 /** Pie/Donut Chart untuk Expense Category (PRD §Dashboard Layout). */
 export function DonutChart({ data, size = 160, thickness = 22 }) {
+  const { formatMoney } = useCurrency();
   const total = data.reduce((sum, d) => sum + d.amount, 0);
   if (total <= 0) return null;
 
@@ -14,7 +15,7 @@ export function DonutChart({ data, size = 160, thickness = 22 }) {
   let offset = 0;
 
   const top = data[0];
-  const summary = `Donut pengeluaran per kategori. Total ${formatIDR(total)} dari ${data.length} kategori. Terbesar: ${top.name} ${formatIDR(top.amount)} (${Math.round((top.amount / total) * 100)}%).`;
+  const summary = `Donut pengeluaran per kategori. Total ${formatMoney(total)} dari ${data.length} kategori. Terbesar: ${top.name} ${formatMoney(top.amount)} (${Math.round((top.amount / total) * 100)}%).`;
 
   return (
     <div className="flex flex-col sm:flex-row items-center gap-md">
@@ -61,7 +62,7 @@ export function DonutChart({ data, size = 160, thickness = 22 }) {
               {slice.name}
             </span>
             <span className="tnum font-medium text-on-background dark:text-dark-on-background whitespace-nowrap">
-              {formatIDR(slice.amount)}
+              {formatMoney(slice.amount)}
             </span>
             <span className="tnum w-10 text-right text-on-surface-variant dark:text-dark-on-surface-variant">
               {Math.round((slice.amount / total) * 100)}%

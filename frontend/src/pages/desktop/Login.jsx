@@ -57,7 +57,7 @@ export function Login() {
             <form onSubmit={handleSubmit} className="space-y-xs">
               <div className="space-y-xs">
                 <label className="text-label-sm text-on-surface dark:text-dark-on-background uppercase tracking-wider" htmlFor="email">
-                  Email Address
+                  Alamat Email
                 </label>
                 <div className="relative">
                   <span
@@ -122,7 +122,7 @@ export function Login() {
                     className="w-4 h-4 rounded border-outline-variant dark:border-dark-outline-variant text-primary focus:ring-primary/50 cursor-pointer"
                   />
                   <span className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant group-hover:text-on-background dark:group-hover:text-dark-on-background transition-colors">
-                    Remember Me
+                    Ingat Saya
                   </span>
                 </label>
                 <a

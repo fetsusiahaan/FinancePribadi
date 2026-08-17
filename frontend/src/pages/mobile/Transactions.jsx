@@ -16,9 +16,11 @@ import {
   updateTransaction,
   deleteTransaction,
 } from "../../services/transaction.service";
-import { formatIDR, formatDate, currentMonthValue } from "../../utils/format";
+import { formatDate, currentMonthValue } from "../../utils/format";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 export function Transactions() {
+  const { formatMoney } = useCurrency();
   const queryClient = useQueryClient();
   const [month, setMonth] = useState(currentMonthValue);
   const [type, setType] = useState("");
@@ -161,7 +163,7 @@ export function Transactions() {
                     }`}
                   >
                     {tx.category?.type === "INCOME" ? "+" : "-"}
-                    {formatIDR(tx.amount)}
+                    {formatMoney(tx.amount)}
                   </span>
                 </div>
 
