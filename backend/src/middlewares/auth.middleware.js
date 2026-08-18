@@ -8,6 +8,7 @@ export function requireAuth(req, res, next) {
   try {
     const payload = verifyToken(header.slice(7));
     req.userId = payload.sub;
+    req.userRole = payload.role;
     next();
   } catch {
     return res.status(401).json({ status: "error", message: "Invalid or expired token" });

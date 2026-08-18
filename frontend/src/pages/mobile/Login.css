@@ -92,30 +92,12 @@
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
 }
 
-.ml-brand-mark {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  display: inline-block;
-  flex-shrink: 0;
+.ml-brand-logo-img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
-
-.ml-brand-mark i {
-  position: absolute;
-  width: 6.3px;
-  height: 6.3px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
-}
-
-.ml-brand-mark i:nth-child(1) { left: 5.4px; top: 0; }
-.ml-brand-mark i:nth-child(2) { left: 0; top: 3.6px; }
-.ml-brand-mark i:nth-child(3) { left: 10.8px; top: 3.6px; }
-.ml-brand-mark i:nth-child(4) { left: 5.4px; top: 6.3px; }
-.ml-brand-mark i:nth-child(5) { left: 0; top: 9.9px; }
-.ml-brand-mark i:nth-child(6) { left: 10.8px; top: 9.9px; }
-.ml-brand-mark i:nth-child(7) { left: 5.4px; top: 12.6px; }
 
 .ml-hero {
   position: relative;

@@ -12,6 +12,11 @@ enum CategoryType {
   EXPENSE
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
   id             String   @id @default(uuid())
   email          String   @unique
@@ -23,6 +28,10 @@ model User {
   riskProfile    String?  @map("risk_profile")
   preferredCurrency String @default("IDR") @map("preferred_currency")
   financialScore Int      @default(0) @map("financial_score")
+  role             UserRole @default(USER)
+  twoFactorSecret  String?  @map("two_factor_secret")
+  twoFactorEnabled Boolean  @default(false) @map("two_factor_enabled")
+  isSuspended      Boolean  @default(false) @map("is_suspended")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 

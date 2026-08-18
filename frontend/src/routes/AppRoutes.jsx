@@ -6,6 +6,8 @@ import { Dashboard } from "../pages/Dashboard";
 import { Transactions } from "../pages/Transactions";
 import { Budgets } from "../pages/Budgets";
 import { Profile } from "../pages/Profile";
+import { Admin } from "../pages/Admin";
+import { AdminLogin } from "../pages/desktop/AdminLogin";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -16,6 +18,15 @@ function ProtectedRoute({ children }) {
 function GuestRoute({ children }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
+}
+
+// Terpisah dari ProtectedRoute: gagal auth lempar ke /admin/login (bukan
+// /login), dan non-admin yang authenticated dilempar ke dashboard biasa.
+function AdminRoute({ children }) {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
+  if (!user) return null;
+  return user.role === "ADMIN" ? children : <Navigate to="/dashboard" replace />;
 }
 
 export function AppRoutes() {
@@ -67,6 +78,15 @@ export function AppRoutes() {
           <ProtectedRoute>
             <Profile />
           </ProtectedRoute>
+        }
+      />
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <Admin />
+          </AdminRoute>
         }
       />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
