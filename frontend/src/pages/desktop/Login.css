@@ -132,29 +132,12 @@
   color: var(--text-main);
 }
 
-.brand-mark {
-  position: relative;
-  width: 20px;
-  height: 20px;
-  display: inline-block;
+.brand-logo-img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
 }
-
-.brand-mark i {
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #7933ee;
-  box-shadow: 0 0 10px rgba(121, 51, 238, 0.35);
-}
-
-.brand-mark i:nth-child(1) { left: 6px; top: 0; }
-.brand-mark i:nth-child(2) { left: 0; top: 4px; }
-.brand-mark i:nth-child(3) { left: 12px; top: 4px; }
-.brand-mark i:nth-child(4) { left: 6px; top: 7px; }
-.brand-mark i:nth-child(5) { left: 0; top: 11px; }
-.brand-mark i:nth-child(6) { left: 12px; top: 11px; }
-.brand-mark i:nth-child(7) { left: 6px; top: 14px; }
 
 .login-layout {
   height: 100vh;

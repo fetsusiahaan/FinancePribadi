@@ -1,0 +1,125 @@
+/* Halaman admin sengaja dibuat berbeda dari Login.css user (gaya "console"
+   gelap solid) supaya operator langsung sadar ini bukan halaman login biasa. */
+.admin-login {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #0b0f14;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.18), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.12), transparent 45%);
+}
+
+.admin-login-card {
+  width: 100%;
+  max-width: 380px;
+  border-radius: 16px;
+  background: #10161d;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  padding: 32px 28px;
+  color: #e2e8f0;
+}
+
+.admin-login-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.admin-login-card h1 {
+  margin-top: 16px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.admin-login-card p.subtitle {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.admin-login-field {
+  margin-top: 16px;
+}
+
+.admin-login-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.admin-login-error {
+  margin-top: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.admin-login-qr {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: #0b0f14;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 12px;
+}
+
+.admin-login-qr img {
+  width: 176px;
+  height: 176px;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+}
+
+.admin-login-secret {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: #cbd5e1;
+  word-break: break-all;
+  text-align: center;
+}
+
+.admin-login-back {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.admin-login-back button {
+  font-size: 13px;
+  color: #94a3b8;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.admin-login-back button:hover {
+  color: #cbd5e1;
+}

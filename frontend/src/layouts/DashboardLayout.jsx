@@ -81,7 +81,11 @@ function NotificationBell() {
 }
 
 export function DashboardLayout({ title, actions, children }) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const navItems =
+    user?.role === "ADMIN"
+      ? [...NAV_ITEMS, { to: "/admin", label: "Admin", icon: "admin_panel_settings" }]
+      : NAV_ITEMS;
 
   return (
     <div className="min-h-dvh bg-surface-container-low dark:bg-dark-background text-on-background dark:text-dark-on-background">
@@ -94,19 +98,17 @@ export function DashboardLayout({ title, actions, children }) {
 
       {/* Sidebar desktop */}
       <aside className="hidden md:flex fixed top-0 left-0 h-full w-60 flex-col bg-surface-container-lowest dark:bg-dark-surface-container-lowest border-r border-outline-variant/40 dark:border-dark-outline-variant/40 z-30">
-        <div className="flex items-center gap-sm px-md h-16 border-b border-outline-variant/40 dark:border-dark-outline-variant/40">
-          <span
-            className="material-symbols-outlined text-primary text-3xl"
-            style={{ fontVariationSettings: '"FILL" 1' }}
-            aria-hidden="true"
-          >
-            hive
-          </span>
-          <span className="font-semibold text-lg tracking-tight">Finora AI</span>
+        <div className="flex items-center gap-md px-md h-16 border-b border-outline-variant/40 dark:border-dark-outline-variant/40">
+          <img
+            src="/images/logo.webp"
+            alt="Finora AI Logo"
+            className="h-10 w-auto object-contain shrink-0 filter drop-shadow-sm"
+          />
+          <span className="font-bold text-lg tracking-tight">Finora AI</span>
         </div>
 
         <nav aria-label="Navigasi utama" className="flex-1 p-sm space-y-xs">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -143,13 +145,11 @@ export function DashboardLayout({ title, actions, children }) {
       {/* Topbar */}
       <header className="fixed top-0 right-0 left-0 md:left-60 h-16 z-20 bg-surface-container-lowest dark:bg-dark-surface-container-lowest border-b border-outline-variant/40 dark:border-dark-outline-variant/40 flex items-center justify-between px-md gap-sm">
         <div className="flex items-center gap-sm min-w-0">
-          <span
-            className="md:hidden material-symbols-outlined text-primary text-2xl"
-            style={{ fontVariationSettings: '"FILL" 1' }}
-            aria-hidden="true"
-          >
-            hive
-          </span>
+          <img
+            src="/images/logo.webp"
+            alt="Finora AI Logo"
+            className="md:hidden h-8 w-auto object-contain shrink-0 filter drop-shadow-sm"
+          />
           <h1 className="font-semibold text-lg truncate">{title}</h1>
         </div>
         <div className="flex items-center gap-sm shrink-0">

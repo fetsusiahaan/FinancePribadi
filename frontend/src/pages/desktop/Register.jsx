@@ -55,9 +55,7 @@ export function Register() {
         <div className="header-left-panel">
           <div className="header-brand-box">
             <div className="finora-brand">
-              <span className="brand-mark" aria-hidden="true">
-                <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-              </span>
+              <img src="/images/logo.webp" alt="Finora AI Logo" className="brand-logo-img" />
               <span>Finora AI</span>
             </div>
           </div>

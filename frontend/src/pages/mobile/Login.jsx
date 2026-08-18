@@ -36,9 +36,7 @@ export function Login() {
     <div className="finora-login-mobile">
       <header className="ml-header">
         <div className="ml-brand">
-          <span className="ml-brand-mark" aria-hidden="true">
-            <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-          </span>
+          <img src="/images/logo.webp" alt="Finora AI Logo" className="ml-brand-logo-img" />
           <span>Finora AI</span>
         </div>
         <ThemeToggle className="!border-white/40 !text-white hover:!bg-white/10" />
