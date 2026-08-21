@@ -1,5 +1,6 @@
 import * as userService from "../services/user.service.js";
 import { checkValidation } from "../utils/validation.js";
+import { getClientIp } from "../utils/getClientIp.js";
 
 export async function getMe(req, res, next) {
   try {
@@ -13,7 +14,7 @@ export async function getMe(req, res, next) {
 export async function updateMe(req, res, next) {
   try {
     checkValidation(req);
-    const data = await userService.updateMe(req.userId, req.body);
+    const data = await userService.updateMe(req.userId, req.body, getClientIp(req));
     res.json({ status: "success", message: "Profile updated", data });
   } catch (err) {
     next(err);

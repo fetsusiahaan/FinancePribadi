@@ -40,6 +40,7 @@ model User {
   budgets       Budget[]
   savingsGoals  SavingsGoal[]
   debts         Debt[]
+  activityLogs  ActivityLog[]
 
   @@map("users")
 }
@@ -99,6 +100,23 @@ model SavingsGoal {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("savings_goals")
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  action    String
+  module    String
+  metadata  Json?
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([action])
+  @@index([module])
+  @@map("activity_logs")
 }
 
 model Debt {

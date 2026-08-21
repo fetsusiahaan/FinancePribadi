@@ -3,6 +3,7 @@ import { userRepository } from "../repositories/user.repository.js";
 import { prisma } from "../config/db.js";
 import { signToken } from "../utils/jwt.js";
 import { toDto as toTransactionDto } from "./transaction.service.js";
+import { logActivity } from "./activityLog.service.js";
 
 function httpError(message, status) {
   const err = new Error(message);
@@ -32,7 +33,7 @@ export async function getMe(userId) {
   return toDto(user);
 }
 
-export async function updateMe(userId, payload) {
+export async function updateMe(userId, payload, ip) {
   const data = {};
   if (payload.name !== undefined) data.name = payload.name;
   if (payload.phone !== undefined) data.phone = payload.phone || null;
@@ -42,6 +43,7 @@ export async function updateMe(userId, payload) {
   if (payload.preferred_currency !== undefined) data.preferredCurrency = payload.preferred_currency;
 
   const user = await userRepository.update(userId, data);
+  await logActivity({ userId, action: "profile.updated", ipAddress: ip });
   return toDto(user);
 }
 

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Modal } from "../../components/ui/Modal";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
+import { Table } from "../../components/ui/Table";
+import { Pagination } from "../../components/ui/Pagination";
 import { ScoreGauge } from "../../components/charts/ScoreGauge";
 import { DonutChart } from "../../components/charts/DonutChart";
 import { formatIDR, formatDate } from "../../utils/format";
@@ -130,21 +131,18 @@ function UserListView({ onSelect }) {
         </Card>
       ) : (
         <Card className="p-0 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-body-sm">
-              <thead className="bg-surface-container dark:bg-dark-surface-container">
-                <tr className="text-left text-on-surface-variant dark:text-dark-on-surface-variant">
-                  <th className="px-md py-sm font-medium">Nama</th>
-                  <th className="px-md py-sm font-medium">Email</th>
-                  <th className="px-md py-sm font-medium">Role</th>
-                  <th className="px-md py-sm font-medium">Status</th>
-                  <th className="px-md py-sm font-medium">Skor</th>
-                  <th className="px-md py-sm font-medium">Bergabung</th>
-                  <th className="px-md py-sm font-medium text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/40 dark:divide-dark-outline-variant/40">
-                {data.items.map((u) => (
+          <Table
+            columns={[
+              { key: "name", label: "Nama" },
+              { key: "email", label: "Email" },
+              { key: "role", label: "Role" },
+              { key: "status", label: "Status" },
+              { key: "score", label: "Skor" },
+              { key: "joined", label: "Bergabung" },
+              { key: "actions", label: "Aksi", align: "right" },
+            ]}
+          >
+            {data.items.map((u) => (
                   <tr key={u.id} className="hover:bg-surface-container/60 dark:hover:bg-dark-surface-container/60">
                     <td className="px-md py-sm">
                       <button
@@ -207,29 +205,8 @@ function UserListView({ onSelect }) {
                     </td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-
-          {data.total > data.page_size && (
-            <div className="flex items-center justify-between px-md py-sm border-t border-outline-variant/40 dark:border-dark-outline-variant/40">
-              <span className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant">
-                Halaman {data.page} dari {Math.ceil(data.total / data.page_size)}
-              </span>
-              <div className="flex gap-xs">
-                <Button variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                  Sebelumnya
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={page >= Math.ceil(data.total / data.page_size)}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Berikutnya
-                </Button>
-              </div>
-            </div>
-          )}
+          </Table>
+          <Pagination page={data.page} pageSize={data.page_size} total={data.total} onPageChange={setPage} />
         </Card>
       )}
 
@@ -341,13 +318,9 @@ function UserDetailView({ userId, onBack }) {
 export function Admin() {
   const [selectedUserId, setSelectedUserId] = useState(null);
 
-  return (
-    <DashboardLayout title="Admin">
-      {selectedUserId ? (
-        <UserDetailView userId={selectedUserId} onBack={() => setSelectedUserId(null)} />
-      ) : (
-        <UserListView onSelect={setSelectedUserId} />
-      )}
-    </DashboardLayout>
+  return selectedUserId ? (
+    <UserDetailView userId={selectedUserId} onBack={() => setSelectedUserId(null)} />
+  ) : (
+    <UserListView onSelect={setSelectedUserId} />
   );
 }

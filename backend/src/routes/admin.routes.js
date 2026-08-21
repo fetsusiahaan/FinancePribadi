@@ -3,6 +3,9 @@ import { body } from "express-validator";
 import { requireAuth } from "../middlewares/auth.middleware.js";
 import { requireRole } from "../middlewares/role.middleware.js";
 import {
+  getOverviewController,
+  getSystemHealthController,
+  listActivityController,
   listUsersController,
   getUserDetailController,
   updateRoleController,
@@ -15,6 +18,9 @@ const router = Router();
 
 router.use(requireAuth, requireRole("ADMIN"));
 
+router.get("/overview", getOverviewController);
+router.get("/system-health", getSystemHealthController);
+router.get("/activity", listActivityController);
 router.get("/users", listUsersController);
 router.get("/users/:id", getUserDetailController);
 

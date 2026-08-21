@@ -1,5 +1,44 @@
 import * as adminService from "../services/admin.service.js";
+import { getSystemHealth } from "../services/systemHealth.service.js";
+import { listActivity } from "../services/activityLog.service.js";
 import { checkValidation } from "../utils/validation.js";
+
+export async function getOverviewController(req, res, next) {
+  try {
+    const data = await adminService.getOverview();
+    res.json({ status: "success", data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSystemHealthController(req, res, next) {
+  try {
+    const data = await getSystemHealth();
+    res.json({ status: "success", data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function listActivityController(req, res, next) {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number(req.query.page_size) || 20));
+    const data = await listActivity({
+      page,
+      pageSize,
+      user: req.query.user || "",
+      action: req.query.action || "",
+      module: req.query.module || "",
+      ip: req.query.ip || "",
+      date: req.query.date || "",
+    });
+    res.json({ status: "success", data });
+  } catch (err) {
+    next(err);
+  }
+}
 
 export async function listUsersController(req, res, next) {
   try {

@@ -4,7 +4,14 @@ import { userRepository } from "../repositories/user.repository.js";
 import { transactionRepository } from "../repositories/transaction.repository.js";
 import * as budgetService from "./budget.service.js";
 import { prisma } from "../config/db.js";
-import { parseMonth } from "../utils/period.js";
+import { parseMonth, previousMonth } from "../utils/period.js";
+
+function todayRangeUTC() {
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  return { start, end };
+}
 
 function httpError(message, status) {
   const err = new Error(message);
@@ -92,6 +99,77 @@ export async function deleteUser(actorId, targetId) {
   const target = await userRepository.findById(targetId);
   if (!target) throw httpError("User not found", 404);
   await userRepository.remove(targetId);
+}
+
+export async function getOverview() {
+  const { start: todayStart, end: todayEnd } = todayRangeUTC();
+  const thisMonth = parseMonth();
+  const lastMonth = previousMonth(thisMonth);
+
+  const [
+    totalUsers,
+    activeUsers,
+    suspendedUsers,
+    newUsersToday,
+    newUsersThisMonth,
+    newUsersLastMonth,
+    totalTransactions,
+    transactionsToday,
+    totalValue,
+    income,
+    expense,
+    goalsCount,
+  ] = await Promise.all([
+    userRepository.count(),
+    userRepository.countBySuspended(false),
+    userRepository.countBySuspended(true),
+    userRepository.countCreatedBetween(todayStart, todayEnd),
+    userRepository.countCreatedBetween(thisMonth.start, thisMonth.end),
+    userRepository.countCreatedBetween(lastMonth.start, lastMonth.end),
+    prisma.transaction.count(),
+    prisma.transaction.count({ where: { date: { gte: todayStart, lt: todayEnd } } }),
+    prisma.transaction.aggregate({ _sum: { amount: true } }),
+    prisma.transaction.aggregate({ where: { category: { type: "INCOME" } }, _sum: { amount: true } }),
+    prisma.transaction.aggregate({ where: { category: { type: "EXPENSE" } }, _sum: { amount: true } }),
+    prisma.savingsGoal.count(),
+  ]);
+
+  const growthPercent =
+    newUsersLastMonth > 0
+      ? Math.round(((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 1000) / 10
+      : 0;
+
+  return {
+    kpi: {
+      total_users: totalUsers,
+      active_users: activeUsers,
+      new_users_today: newUsersToday,
+      total_transactions: totalTransactions,
+      total_transaction_value: Number(totalValue._sum.amount || 0),
+      ai_requests_today: null,
+      ai_cost_today: null,
+      monthly_revenue: null,
+    },
+    user_summary: {
+      total_users: totalUsers,
+      active_users: activeUsers,
+      new_users_today: newUsersToday,
+      suspended_users: suspendedUsers,
+      growth_percent: growthPercent,
+    },
+    finance_summary: {
+      transactions_today: transactionsToday,
+      total_value: Number(totalValue._sum.amount || 0),
+      income: Number(income._sum.amount || 0),
+      expense: Number(expense._sum.amount || 0),
+      accounts_count: null,
+      goals_count: goalsCount,
+    },
+    ai_summary: null,
+    subscription_summary: null,
+    recent_activity: null,
+    system_alerts: null,
+  };
 }
 
 export async function resetPassword(targetId) {

@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { userRepository } from "../repositories/user.repository.js";
 import { signToken, verifyToken } from "../utils/jwt.js";
 import * as totpService from "./totp.service.js";
+import { logActivity } from "./activityLog.service.js";
 
 function httpError(message, status) {
   const err = new Error(message);
@@ -31,7 +32,7 @@ export async function register({ name, email, password }) {
   return { user_id: user.id, token };
 }
 
-export async function login({ email, password }) {
+export async function login({ email, password }, ip) {
   const user = await userRepository.findByEmail(email);
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
     throw httpError("Invalid email or password", 401);
@@ -42,6 +43,7 @@ export async function login({ email, password }) {
 
   if (user.role !== "ADMIN") {
     const token = signToken({ sub: user.id, role: user.role });
+    await logActivity({ userId: user.id, action: "auth.login", ipAddress: ip });
     return { status: "ok", user_id: user.id, token };
   }
 
@@ -52,12 +54,13 @@ export async function login({ email, password }) {
   return { status: "2fa_required", challenge_token: challengeToken };
 }
 
-export async function verifyLoginTwoFactor({ challenge_token, code }) {
+export async function verifyLoginTwoFactor({ challenge_token, code }, ip) {
   const payload = verifyChallengeToken(challenge_token);
   const user = await userRepository.findById(payload.sub);
   if (!user || !user.twoFactorEnabled) throw httpError("2FA not enabled", 400);
   if (!totpService.verifyCode(user.twoFactorSecret, code)) throw httpError("Invalid code", 401);
   const token = signToken({ sub: user.id, role: user.role });
+  await logActivity({ userId: user.id, action: "auth.login", ipAddress: ip });
   return { user_id: user.id, token };
 }
 
