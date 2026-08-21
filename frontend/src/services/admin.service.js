@@ -1,5 +1,8 @@
 import { api } from "./api";
 
+export const getOverview = () => api.get("/admin/overview").then((r) => r.data.data);
+export const getSystemHealth = () => api.get("/admin/system-health").then((r) => r.data.data);
+export const listActivity = (params) => api.get("/admin/activity", { params }).then((r) => r.data.data);
 export const listUsers = (params) => api.get("/admin/users", { params }).then((r) => r.data.data);
 export const getUserDetail = (id) => api.get(`/admin/users/${id}`).then((r) => r.data.data);
 export const updateRole = (id, role) =>

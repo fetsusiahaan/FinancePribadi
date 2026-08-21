@@ -10,6 +10,9 @@ frontend/dist/
 logs/
 npm-debug.log*
 
+# Android RN app — tidak ikut di-commit/push
+android-apk/
+
 .DS_Store
 .vscode/
 

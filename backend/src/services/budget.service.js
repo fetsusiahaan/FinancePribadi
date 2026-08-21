@@ -2,6 +2,7 @@ import { budgetRepository } from "../repositories/budget.repository.js";
 import { categoryRepository } from "../repositories/category.repository.js";
 import { transactionRepository } from "../repositories/transaction.repository.js";
 import { parseMonth } from "../utils/period.js";
+import { logActivity } from "./activityLog.service.js";
 
 function httpError(message, status) {
   const err = new Error(message);
@@ -68,7 +69,7 @@ export async function list(userId, month) {
   };
 }
 
-export async function create(userId, { category_id, amount_limit, month_year }) {
+export async function create(userId, { category_id, amount_limit, month_year }, ip) {
   await assertExpenseCategory(category_id, userId);
   const monthStart = new Date(`${month_year.slice(0, 7)}-01T00:00:00.000Z`);
 
@@ -81,10 +82,16 @@ export async function create(userId, { category_id, amount_limit, month_year }) 
     amountLimit: amount_limit,
     monthYear: monthStart,
   });
+  await logActivity({
+    userId,
+    action: "budget.created",
+    ipAddress: ip,
+    metadata: { budget_id: budget.id },
+  });
   return toDto(budget, 0);
 }
 
-export async function update(userId, id, { amount_limit }) {
+export async function update(userId, id, { amount_limit }, ip) {
   const existing = await budgetRepository.findOwned(id, userId);
   if (!existing) throw httpError("Budget not found", 404);
 
@@ -94,11 +101,23 @@ export async function update(userId, id, { amount_limit }) {
 
   const spending = await transactionRepository.groupByCategory(userId, "EXPENSE", range.start, range.end);
   const spent = Number(spending.find((row) => row.categoryId === budget.categoryId)?._sum.amount || 0);
+  await logActivity({
+    userId,
+    action: "budget.updated",
+    ipAddress: ip,
+    metadata: { budget_id: budget.id },
+  });
   return toDto(budget, spent);
 }
 
-export async function remove(userId, id) {
+export async function remove(userId, id, ip) {
   const existing = await budgetRepository.findOwned(id, userId);
   if (!existing) throw httpError("Budget not found", 404);
   await budgetRepository.remove(id);
+  await logActivity({
+    userId,
+    action: "budget.deleted",
+    ipAddress: ip,
+    metadata: { budget_id: id },
+  });
 }

@@ -1,5 +1,6 @@
 import * as authService from "../services/auth.service.js";
 import { checkValidation } from "../utils/validation.js";
+import { getClientIp } from "../utils/getClientIp.js";
 
 export async function registerController(req, res, next) {
   try {
@@ -14,7 +15,7 @@ export async function registerController(req, res, next) {
 export async function loginController(req, res, next) {
   try {
     checkValidation(req);
-    const data = await authService.login(req.body);
+    const data = await authService.login(req.body, getClientIp(req));
     res.status(200).json({ status: "success", message: "Login successful", data });
   } catch (err) {
     next(err);
@@ -24,7 +25,7 @@ export async function loginController(req, res, next) {
 export async function verifyTwoFactorController(req, res, next) {
   try {
     checkValidation(req);
-    const data = await authService.verifyLoginTwoFactor(req.body);
+    const data = await authService.verifyLoginTwoFactor(req.body, getClientIp(req));
     res.status(200).json({ status: "success", message: "Login successful", data });
   } catch (err) {
     next(err);

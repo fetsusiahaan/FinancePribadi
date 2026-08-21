@@ -36,4 +36,6 @@ export const userRepository = {
   },
 
   countByRole: (role) => prisma.user.count({ where: { role } }),
+  countBySuspended: (isSuspended) => prisma.user.count({ where: { isSuspended } }),
+  countCreatedBetween: (start, end) => prisma.user.count({ where: { createdAt: { gte: start, lt: end } } }),
 };

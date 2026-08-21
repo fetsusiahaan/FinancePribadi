@@ -35,7 +35,7 @@ export const todayValue = () => new Date().toISOString().slice(0, 10);
 
 // Format angka mentah jadi string berpemisah ribuan ala "50.000" saat diketik.
 export const formatThousands = (rawDigits) => {
-  if (!rawDigits) return "";
+  if (rawDigits === null || rawDigits === undefined || rawDigits === "") return "";
   return new Intl.NumberFormat("id-ID").format(Number(rawDigits));
 };
 

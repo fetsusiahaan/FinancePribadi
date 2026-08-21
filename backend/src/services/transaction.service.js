@@ -1,6 +1,7 @@
 import { transactionRepository } from "../repositories/transaction.repository.js";
 import { categoryRepository } from "../repositories/category.repository.js";
 import { parseMonth } from "../utils/period.js";
+import { logActivity } from "./activityLog.service.js";
 
 function httpError(message, status) {
   const err = new Error(message);
@@ -59,7 +60,7 @@ export async function list(userId, { page = 1, limit = 20, type, categoryId, mon
   };
 }
 
-export async function create(userId, { amount, date, category_id, description, receipt_url, is_recurring }) {
+export async function create(userId, { amount, date, category_id, description, receipt_url, is_recurring }, ip) {
   await assertCategory(category_id, userId);
   const transaction = await transactionRepository.create({
     userId,
@@ -70,10 +71,16 @@ export async function create(userId, { amount, date, category_id, description, r
     receiptUrl: receipt_url || null,
     isRecurring: Boolean(is_recurring),
   });
+  await logActivity({
+    userId,
+    action: "transaction.created",
+    ipAddress: ip,
+    metadata: { transaction_id: transaction.id, amount: Number(transaction.amount) },
+  });
   return toDto(transaction);
 }
 
-export async function update(userId, id, payload) {
+export async function update(userId, id, payload, ip) {
   const existing = await transactionRepository.findOwned(id, userId);
   if (!existing) throw httpError("Transaction not found", 404);
 
@@ -89,11 +96,23 @@ export async function update(userId, id, payload) {
   }
 
   const transaction = await transactionRepository.update(id, data);
+  await logActivity({
+    userId,
+    action: "transaction.updated",
+    ipAddress: ip,
+    metadata: { transaction_id: transaction.id, amount: Number(transaction.amount) },
+  });
   return toDto(transaction);
 }
 
-export async function remove(userId, id) {
+export async function remove(userId, id, ip) {
   const existing = await transactionRepository.findOwned(id, userId);
   if (!existing) throw httpError("Transaction not found", 404);
   await transactionRepository.remove(id);
+  await logActivity({
+    userId,
+    action: "transaction.deleted",
+    ipAddress: ip,
+    metadata: { transaction_id: id },
+  });
 }
