@@ -9,6 +9,12 @@ import adminRoutes from "./admin.routes.js";
 
 const router = Router();
 
+// Probe ringan buat klien (mobile ConnectionContext) cek backend hidup.
+// Publik & tanpa DB call — supaya cepat dan gak ikut gagal saat DB lambat.
+router.get("/health", (req, res) => {
+  res.json({ status: "ok", uptime: process.uptime() });
+});
+
 router.use("/auth", authRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/categories", categoryRoutes);
