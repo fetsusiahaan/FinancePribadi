@@ -6,6 +6,8 @@ import {
   verifyTwoFactorController,
   setupTwoFactorController,
   confirmTwoFactorSetupController,
+  refreshController,
+  logoutController,
 } from "../controllers/auth.controller.js";
 
 const router = Router();
@@ -51,6 +53,18 @@ router.post(
     body("code").isLength({ min: 6, max: 6 }).isNumeric().withMessage("Code must be a 6-digit number"),
   ],
   confirmTwoFactorSetupController
+);
+
+router.post(
+  "/refresh",
+  [body("refresh_token").notEmpty().withMessage("Refresh token is required")],
+  refreshController
+);
+
+router.post(
+  "/logout",
+  [body("refresh_token").notEmpty().withMessage("Refresh token is required")],
+  logoutController
 );
 
 export default router;

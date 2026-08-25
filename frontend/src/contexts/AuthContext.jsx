@@ -8,8 +8,9 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [user, setUser] = useState(null);
 
-  function applyToken(nextToken) {
+  function applyTokens(nextToken, nextRefreshToken) {
     localStorage.setItem("token", nextToken);
+    if (nextRefreshToken) localStorage.setItem("refresh_token", nextRefreshToken);
     setToken(nextToken);
   }
 
@@ -30,17 +31,30 @@ export function AuthProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  // Interceptor api.js (lihat services/api.js) dispatch event ini kalau
+  // auto-refresh access token gagal di tengah request (refresh token basi
+  // atau kepakai di device lain) -- localStorage sudah dibersihkan di sana,
+  // ini cuma sinkronkan state React-nya.
+  useEffect(() => {
+    function handleAuthLogout() {
+      setToken(null);
+      setUser(null);
+    }
+    window.addEventListener("auth:logout", handleAuthLogout);
+    return () => window.removeEventListener("auth:logout", handleAuthLogout);
+  }, []);
+
   // Mengembalikan data mentah, bukan langsung apply token — pemanggil (Login
   // biasa atau AdminLogin) yang menentukan langkah berikutnya berdasar status.
   async function login(payload) {
     const data = await authService.login(payload);
-    if (data.status === "ok") applyToken(data.token);
+    if (data.status === "ok") applyTokens(data.token, data.refresh_token);
     return data;
   }
 
   async function verifyTwoFactor(challengeToken, code) {
     const data = await authService.verifyTwoFactor({ challenge_token: challengeToken, code });
-    applyToken(data.token);
+    applyTokens(data.token, data.refresh_token);
     return data;
   }
 
@@ -50,24 +64,36 @@ export function AuthProvider({ children }) {
 
   async function confirmTwoFactorSetup(challengeToken, code) {
     const data = await authService.confirmTwoFactorSetup({ challenge_token: challengeToken, code });
-    applyToken(data.token);
+    applyTokens(data.token, data.refresh_token);
     return data;
   }
 
   async function register(payload) {
     const data = await authService.register(payload);
-    applyToken(data.token);
+    applyTokens(data.token, data.refresh_token);
   }
 
-  function logout() {
+  async function logout() {
+    const refreshToken = localStorage.getItem("refresh_token");
+    if (refreshToken) {
+      try {
+        await authService.logout(refreshToken);
+      } catch {
+        // Diam -- token sisi server boleh saja gagal direvoke (mis. offline),
+        // sisi client tetap harus bersih & keluar.
+      }
+    }
     localStorage.removeItem("token");
+    localStorage.removeItem("refresh_token");
     setToken(null);
     setUser(null);
   }
 
   // Dipakai setelah ganti password: token lama diganti tanpa memaksa logout.
+  // Endpoint ganti-password cuma menerbitkan access token baru, bukan pasangan
+  // refresh token -- refresh token yang ada tetap berlaku apa adanya.
   function replaceToken(nextToken) {
-    applyToken(nextToken);
+    applyTokens(nextToken);
   }
 
   return (

@@ -9,13 +9,14 @@
 
 ## Technology Stack
 
-*   **Frontend:** React.js + Vite
-*   **UI:** TailwindCSS + Shadcn UI
+*   **Frontend (Web):** React.js + Vite
+*   **Mobile:** React Native (Bare Workflow) — Android native app, folder `android-apk/`
+*   **UI:** TailwindCSS + Shadcn UI (web); NativeWind + custom design tokens (mobile)
 *   **Backend:** Express.js (Node.js)
 *   **AI:** OpenAI GPT / Claude / Gemini
 *   **Database:** PostgreSQL
 *   **Cache:** Redis
-*   **Authentication:** JWT + Refresh Token
+*   **Authentication:** JWT + Refresh Token; biometric unlock (fingerprint) di app Android via Keystore
 *   **Storage:** S3 Compatible Storage
 *   **Deployment:** Docker + Nginx
 
@@ -199,6 +200,24 @@ Login → Complete Profile → Input Income → Input Expense → AI Analysis �
 *   PostgreSQL, Redis
 *   OpenAI GPT, LangChain, Embeddings, Vector Database, RAG.
 
+### Android App (Native, React Native Bare)
+Aplikasi Android terpisah dari Web App, dibangun dengan React Native bare workflow (bukan Expo, bukan PWA) di folder `android-apk/`. Berbagi backend Express.js yang sama lewat REST API.
+
+**Stack:**
+*   React Native (bare), NativeWind (Tailwind untuk RN)
+*   `react-native-keychain` — penyimpanan aman token & biometric via Android Keystore
+*   `@react-navigation` — navigasi stack + custom bottom tab bar
+*   `@tanstack/react-query` — data fetching & cache
+
+**Fitur yang sudah tersedia:**
+*   Login, Register, Dashboard, Transactions, Budgets, Profile (versi mobile dari fitur web)
+*   Login dengan sidik jari (opt-in setelah login pertama)
+*   **App Lock / Session Timeout:** app otomatis terkunci dan minta verifikasi ulang (sidik jari atau password) setelah di-background 5+ menit tanpa aktivitas, atau setelah force-close lalu dibuka kembali dengan sesi yang masih ada — mengikuti pola standar mobile banking (BCA mobile, Livin', dst).
+*   Deteksi status koneksi (online/offline) dengan banner & gating startup saat backend tidak terjangkau
+*   Dark mode
+
+**Belum tersedia di Android app (gap dengan Web App):** Savings Goal, Debt Management, Investment Portfolio, AI Chat, AI Transaction Analyzer, Financial Calendar, Reports, Notifications — sejalan dengan modul yang juga belum ada di backend (lihat bagian Business & Roadmap).
+
 ### Folder Structure (Frontend & Backend Concept)
 ```text
 src/
@@ -247,7 +266,8 @@ Open Banking, OCR Receipt, WhatsApp Bot, Telegram Bot, Voice AI, Investment Mark
 ### Roadmap
 *   **Phase 1 (MVP):** Authentication, Dashboard, Income, Expense, Budget, AI Chat, Financial Score.
 *   **Phase 2:** Savings Goal, Debt Planner, Reports, Notifications, Investment.
-*   **Phase 3:** OCR, Open Banking, AI Forecast, AI Coach, Mobile PWA.
+*   **Phase 3:** OCR, Open Banking, AI Forecast, AI Coach.
+    *   ~~Mobile PWA~~ — digantikan Android native app (React Native bare, `android-apk/`), sudah berjalan lebih awal dari jadwal Phase 3 untuk fitur dasar (auth, dashboard, transaksi, budget, biometric login, app lock). Modul lanjutan (savings, debt, investment, AI, reports, notifications) masih menyusul backend.
 
 ### Estimasi Pengembangan
 | Sprint | Fokus | Durasi |

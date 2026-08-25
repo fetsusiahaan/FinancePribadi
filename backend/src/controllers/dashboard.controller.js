@@ -17,3 +17,12 @@ export async function getCashflow(req, res, next) {
     next(err);
   }
 }
+
+export async function getRangeCashflow(req, res, next) {
+  try {
+    const data = await dashboardService.getRangeCashflow(req.userId, req.query.range);
+    res.json({ status: "success", data });
+  } catch (err) {
+    next(err);
+  }
+}

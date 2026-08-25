@@ -6,3 +6,6 @@ export const verifyTwoFactor = (payload) => api.post("/auth/login/2fa-verify", p
 export const setupTwoFactor = (payload) => api.post("/auth/login/2fa-setup", payload).then((r) => r.data.data);
 export const confirmTwoFactorSetup = (payload) =>
   api.post("/auth/login/2fa-setup/confirm", payload).then((r) => r.data.data);
+export const refresh = (refresh_token) =>
+  api.post("/auth/refresh", { refresh_token }).then((r) => r.data.data);
+export const logout = (refresh_token) => api.post("/auth/logout", { refresh_token });

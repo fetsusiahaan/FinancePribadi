@@ -43,6 +43,17 @@ export const transactionRepository = {
       _sum: { amount: true },
     }),
 
+  // Dipakai getRangeCashflow: satu query untuk seluruh rentang, dikelompokkan
+  // per hari di service. groupBy Prisma tidak bisa mengelompokkan per tanggal
+  // (kolomnya DateTime, granularitasnya sampai detik), jadi barisnya diambil
+  // apa adanya. `select` sempit — cuma date/amount/type yang dipakai.
+  listBetween: (userId, start, end) =>
+    prisma.transaction.findMany({
+      where: { userId, date: { gte: start, lt: end } },
+      select: { date: true, amount: true, category: { select: { type: true } } },
+      orderBy: { date: "asc" },
+    }),
+
   recent: (userId, take = 5) =>
     prisma.transaction.findMany({
       where: { userId },

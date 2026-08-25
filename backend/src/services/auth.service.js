@@ -3,6 +3,7 @@ import { userRepository } from "../repositories/user.repository.js";
 import { signToken, verifyToken } from "../utils/jwt.js";
 import * as totpService from "./totp.service.js";
 import { logActivity } from "./activityLog.service.js";
+import { issueRefreshToken, rotateRefreshToken, revokeRefreshToken } from "./refreshToken.service.js";
 
 function httpError(message, status) {
   const err = new Error(message);
@@ -29,7 +30,8 @@ export async function register({ name, email, password }) {
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await userRepository.create({ name, email, passwordHash });
   const token = signToken({ sub: user.id, role: user.role });
-  return { user_id: user.id, token };
+  const refresh_token = await issueRefreshToken(user.id);
+  return { user_id: user.id, token, refresh_token };
 }
 
 export async function login({ email, password }, ip) {
@@ -43,8 +45,9 @@ export async function login({ email, password }, ip) {
 
   if (user.role !== "ADMIN") {
     const token = signToken({ sub: user.id, role: user.role });
+    const refresh_token = await issueRefreshToken(user.id);
     await logActivity({ userId: user.id, action: "auth.login", ipAddress: ip });
-    return { status: "ok", user_id: user.id, token };
+    return { status: "ok", user_id: user.id, token, refresh_token };
   }
 
   const challengeToken = signToken({ sub: user.id, typ: "2fa_challenge" }, { expiresIn: "5m" });
@@ -60,8 +63,9 @@ export async function verifyLoginTwoFactor({ challenge_token, code }, ip) {
   if (!user || !user.twoFactorEnabled) throw httpError("2FA not enabled", 400);
   if (!totpService.verifyCode(user.twoFactorSecret, code)) throw httpError("Invalid code", 401);
   const token = signToken({ sub: user.id, role: user.role });
+  const refresh_token = await issueRefreshToken(user.id);
   await logActivity({ userId: user.id, action: "auth.login", ipAddress: ip });
-  return { user_id: user.id, token };
+  return { user_id: user.id, token, refresh_token };
 }
 
 export async function setupTwoFactor(challenge_token) {
@@ -81,5 +85,14 @@ export async function confirmTwoFactorSetup({ challenge_token, code }) {
   if (!totpService.verifyCode(user.twoFactorSecret, code)) throw httpError("Invalid code", 401);
   await userRepository.update(user.id, { twoFactorEnabled: true });
   const token = signToken({ sub: user.id, role: user.role });
-  return { user_id: user.id, token };
+  const refresh_token = await issueRefreshToken(user.id);
+  return { user_id: user.id, token, refresh_token };
+}
+
+export async function refreshAccessToken(refreshToken) {
+  return rotateRefreshToken(refreshToken);
+}
+
+export async function logout(refreshToken) {
+  await revokeRefreshToken(refreshToken);
 }

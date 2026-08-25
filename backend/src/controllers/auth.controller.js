@@ -51,3 +51,23 @@ export async function confirmTwoFactorSetupController(req, res, next) {
     next(err);
   }
 }
+
+export async function refreshController(req, res, next) {
+  try {
+    checkValidation(req);
+    const data = await authService.refreshAccessToken(req.body.refresh_token);
+    res.status(200).json({ status: "success", message: "Token refreshed", data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function logoutController(req, res, next) {
+  try {
+    checkValidation(req);
+    await authService.logout(req.body.refresh_token);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
