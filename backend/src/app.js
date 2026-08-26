@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
 import apiRoutes from "./routes/index.js";
+import { openApiSpec } from "./docs/openapi.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { logBackend } from "./utils/logger.js";
 import { recordRequest, recordTimeout } from "./utils/metrics.js";
@@ -25,6 +27,18 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Spec mentah — buat di-import Postman/Insomnia atau codegen client.
+app.get("/api/docs.json", (req, res) => res.json(openApiSpec));
+
+app.use(
+  "/api/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(openApiSpec, {
+    customSiteTitle: "Finora AI — API Docs",
+    swaggerOptions: { persistAuthorization: true, docExpansion: "list", tagsSorter: "alpha" },
+  })
+);
 
 app.use("/api/v1", apiRoutes);
 
