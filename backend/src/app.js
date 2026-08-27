@@ -10,7 +10,12 @@ import { recordRequest, recordTimeout } from "./utils/metrics.js";
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+// Default express.json() cuma 100kb -- avatar base64 tanpa kompresi jauh
+// melebihi itu dan akan ditolak sebagai 413 sebelum sampai ke handler.
+// 12mb memberi ruang untuk batas 8mb di user.service.js plus overhead JSON,
+// sehingga penolakan datang dari validasi kita (pesannya jelas) alih-alih dari
+// body-parser (pesannya tidak).
+app.use(express.json({ limit: "12mb" }));
 
 app.use((req, res, next) => {
   const startedAt = process.hrtime.bigint();

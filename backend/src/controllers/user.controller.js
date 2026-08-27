@@ -21,6 +21,34 @@ export async function updateMe(req, res, next) {
   }
 }
 
+export async function getAvatar(req, res, next) {
+  try {
+    const data = await userService.getAvatar(req.userId);
+    res.json({ status: "success", data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateAvatar(req, res, next) {
+  try {
+    checkValidation(req);
+    const data = await userService.updateAvatar(req.userId, req.body.avatar, getClientIp(req));
+    res.json({ status: "success", message: "Foto profil diperbarui", data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteAvatar(req, res, next) {
+  try {
+    const data = await userService.deleteAvatar(req.userId, getClientIp(req));
+    res.json({ status: "success", message: "Foto profil dihapus", data });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function changePassword(req, res, next) {
   try {
     checkValidation(req);

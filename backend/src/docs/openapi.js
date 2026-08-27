@@ -118,6 +118,16 @@ export const openApiSpec = {
           income_range: { type: "number", nullable: true },
           risk_profile: { type: "string", nullable: true },
           preferred_currency: { type: "string", enum: ["IDR", "USD"] },
+          has_avatar: {
+            type: "boolean",
+            description: "Isi foto TIDAK ikut di sini — ambil lewat GET /users/me/avatar.",
+          },
+          avatar_updated_at: {
+            type: "string",
+            format: "date-time",
+            nullable: true,
+            description: "Cache-buster: berubah tiap foto diganti.",
+          },
         },
       },
       Category: {
@@ -695,6 +705,65 @@ export const openApiSpec = {
         responses: {
           200: okJson(successEnvelope(null, { message: "Account deleted" })),
           401: errorResponse("Password salah / token tidak valid"),
+          ...commonResponses,
+        },
+      },
+    },
+    "/users/me/avatar": {
+      get: {
+        tags: ["Users"],
+        summary: "Ambil foto profil",
+        description:
+          "Dipisah dari `GET /users/me` karena isinya base64 tanpa kompresi (bisa megabyte-an) — " +
+          "`/users/me` hanya mengembalikan penanda `has_avatar` dan `avatar_updated_at`, " +
+          "dan client memanggil endpoint ini hanya kalau `has_avatar` bernilai true.",
+        security: bearerAuth,
+        responses: {
+          200: okJson(
+            successEnvelope({
+              type: "object",
+              properties: {
+                avatar: { type: "string", description: "Data URI, mis. data:image/jpeg;base64,..." },
+                updated_at: { type: "string", format: "date-time" },
+              },
+            })
+          ),
+          404: errorResponse("User tidak ditemukan atau belum punya foto profil"),
+          ...commonResponses,
+        },
+      },
+      put: {
+        tags: ["Users"],
+        summary: "Unggah / ganti foto profil",
+        description:
+          "Body harus data URI base64 (`data:<mime>;base64,<payload>`), bukan base64 telanjang. " +
+          "Tipe yang diterima: JPEG, PNG, WebP. Batas payload 8MB — batas body parser Express " +
+          "disetel 12MB agar penolakan datang dari validasi ini (pesannya jelas) alih-alih dari body parser.",
+        security: bearerAuth,
+        requestBody: jsonBody({
+          type: "object",
+          required: ["avatar"],
+          properties: {
+            avatar: { type: "string", example: "data:image/jpeg;base64,/9j/4AAQSkZJRg..." },
+          },
+        }),
+        responses: {
+          200: okJson(
+            successEnvelope({ $ref: "#/components/schemas/User" }, { message: "Foto profil diperbarui" })
+          ),
+          413: errorResponse("Ukuran foto melebihi 8MB"),
+          422: errorResponse("Bukan data URI base64 yang sah, atau format bukan JPEG/PNG/WebP"),
+          ...commonResponses,
+        },
+      },
+      delete: {
+        tags: ["Users"],
+        summary: "Hapus foto profil",
+        security: bearerAuth,
+        responses: {
+          200: okJson(
+            successEnvelope({ $ref: "#/components/schemas/User" }, { message: "Foto profil dihapus" })
+          ),
           ...commonResponses,
         },
       },

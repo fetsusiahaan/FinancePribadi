@@ -4,6 +4,12 @@ export const userRepository = {
   findByEmail: (email) => prisma.user.findUnique({ where: { email } }),
   findByGoogleId: (googleId) => prisma.user.findUnique({ where: { googleId } }),
   findById: (id) => prisma.user.findUnique({ where: { id } }),
+
+  // Dipisah dari findById: kolom `avatar` bisa berukuran belasan MB, jadi ia
+  // tidak boleh ikut terangkut di jalur yang cuma butuh profil/role. Dua query
+  // kecil jauh lebih murah daripada satu query yang selalu menyeret blob.
+  findAvatarById: (id) =>
+    prisma.user.findUnique({ where: { id }, select: { avatar: true, updatedAt: true } }),
   create: (data) => prisma.user.create({ data }),
   update: (id, data) => prisma.user.update({ where: { id }, data }),
   remove: (id) => prisma.user.delete({ where: { id } }),

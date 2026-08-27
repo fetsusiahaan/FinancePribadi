@@ -11,6 +11,14 @@ function httpError(message, status) {
   return err;
 }
 
+// Batas ukuran avatar. Base64 tanpa kompresi: string yang sampai di sini
+// sudah ~33% lebih besar dari file aslinya, jadi 8MB di sini ~= foto 6MB.
+// Batas ini bukan hiasan -- tanpanya satu request bisa menahan memori server
+// selama beberapa MB per koneksi dan membuat baris Postgres membengkak tanpa
+// batas atas.
+const AVATAR_MAX_BYTES = 8 * 1024 * 1024;
+const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 export function toDto(user) {
   return {
     id: user.id,
@@ -23,6 +31,14 @@ export function toDto(user) {
     risk_profile: user.riskProfile,
     preferred_currency: user.preferredCurrency,
     financial_score: user.financialScore,
+    // Isi avatar SENGAJA tidak ikut -- lihat komentar di schema.prisma.
+    // Yang dikirim cuma penanda ada/tidak, supaya UI tahu harus menampilkan
+    // foto atau inisial tanpa harus mengunduh blob-nya lebih dulu.
+    has_avatar: !!user.avatar,
+    // Dipakai client sebagai cache-buster saat memuat /users/me/avatar:
+    // URL yang sama dengan query berbeda memaksa gambar dimuat ulang setelah
+    // user mengganti fotonya.
+    avatar_updated_at: user.avatar ? user.updatedAt : null,
     created_at: user.createdAt,
   };
 }
@@ -44,6 +60,48 @@ export async function updateMe(userId, payload, ip) {
 
   const user = await userRepository.update(userId, data);
   await logActivity({ userId, action: "profile.updated", ipAddress: ip });
+  return toDto(user);
+}
+
+export async function getAvatar(userId) {
+  const row = await userRepository.findAvatarById(userId);
+  if (!row) throw httpError("User not found", 404);
+  if (!row.avatar) throw httpError("Avatar not set", 404);
+  return { avatar: row.avatar, updated_at: row.updatedAt };
+}
+
+export async function updateAvatar(userId, avatar, ip) {
+  // Format wajib data URI, bukan base64 telanjang: tanpa prefix tipe, client
+  // tidak tahu cara merender balik isinya, dan kita tidak punya cara memvalidasi
+  // bahwa yang diunggah memang gambar.
+  const match = /^data:([a-z]+\/[a-z0-9.+-]+);base64,(.+)$/i.exec(avatar || "");
+  if (!match) throw httpError("Avatar harus berupa data URI base64", 422);
+
+  const [, mimeType, payload] = match;
+  if (!AVATAR_ALLOWED_TYPES.includes(mimeType.toLowerCase())) {
+    throw httpError("Format gambar harus JPEG, PNG, atau WebP", 422);
+  }
+
+  // Panjang string base64, bukan hasil decode: yang membebani memori dan baris
+  // Postgres adalah string ini apa adanya.
+  if (Buffer.byteLength(payload, "utf8") > AVATAR_MAX_BYTES) {
+    throw httpError("Ukuran foto melebihi 8MB", 413);
+  }
+
+  // Payload harus base64 sah. Tanpa cek ini, string sampah apa pun bisa
+  // tersimpan dan baru ketahuan rusak saat gambar gagal dirender di client.
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(payload)) {
+    throw httpError("Data gambar tidak valid", 422);
+  }
+
+  const user = await userRepository.update(userId, { avatar });
+  await logActivity({ userId, action: "profile.avatar_updated", ipAddress: ip });
+  return toDto(user);
+}
+
+export async function deleteAvatar(userId, ip) {
+  const user = await userRepository.update(userId, { avatar: null });
+  await logActivity({ userId, action: "profile.avatar_removed", ipAddress: ip });
   return toDto(user);
 }
 

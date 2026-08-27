@@ -22,6 +22,11 @@ model User {
   email          String   @unique
   passwordHash   String?  @map("password_hash")
   googleId       String?  @unique @map("google_id")
+  // Foto profil sebagai data URI base64 penuh (tanpa kompresi). SENGAJA tidak
+  // pernah ikut di toDto()/GET /users/me: isinya bisa belasan MB dan endpoint
+  // itu dipanggil tiap cold start lalu di-cache ke AsyncStorage. Dibaca lewat
+  // GET /users/me/avatar saja, oleh layar yang benar-benar menampilkannya.
+  avatar         String?
   name           String
   phone          String?
   profession     String?

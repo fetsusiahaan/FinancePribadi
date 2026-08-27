@@ -1,7 +1,16 @@
 import { Router } from "express";
 import { body } from "express-validator";
 import { requireAuth } from "../middlewares/auth.middleware.js";
-import { getMe, updateMe, changePassword, exportData, deleteMe } from "../controllers/user.controller.js";
+import {
+  getMe,
+  updateMe,
+  changePassword,
+  getAvatar,
+  updateAvatar,
+  deleteAvatar,
+  exportData,
+  deleteMe,
+} from "../controllers/user.controller.js";
 
 const router = Router();
 
@@ -21,6 +30,17 @@ router.patch(
   ],
   updateMe
 );
+
+// Avatar dipisah dari PATCH /me: isinya bisa megabyte-an, jadi ia tidak boleh
+// ikut terkirim setiap kali user cuma mengganti nama atau nomor HP.
+router
+  .route("/me/avatar")
+  .get(getAvatar)
+  .put(
+    [body("avatar").isString().notEmpty().withMessage("avatar is required")],
+    updateAvatar
+  )
+  .delete(deleteAvatar);
 
 router.put(
   "/me/password",
