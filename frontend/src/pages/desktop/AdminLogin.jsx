@@ -115,7 +115,7 @@ export function AdminLogin() {
                   required
                   autoComplete="off"
                   className="w-full min-h-11 px-3 py-2 rounded-lg text-body-sm bg-[#0b0f14] border border-[rgba(148,163,184,0.25)] text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
-                  placeholder="admin@finora.app"
+                  placeholder="admin@finetra.app"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                 />

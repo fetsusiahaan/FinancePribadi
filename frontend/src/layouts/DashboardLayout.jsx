@@ -101,10 +101,10 @@ export function DashboardLayout({ title, actions, children }) {
         <div className="flex items-center gap-md px-md h-16 border-b border-outline-variant/40 dark:border-dark-outline-variant/40">
           <img
             src="/images/logo.webp"
-            alt="Finora AI Logo"
+            alt="Finetra AI Logo"
             className="h-10 w-auto object-contain shrink-0 filter drop-shadow-sm"
           />
-          <span className="font-bold text-lg tracking-tight">Finora AI</span>
+          <span className="font-bold text-lg tracking-tight">Finetra AI</span>
         </div>
 
         <nav aria-label="Navigasi utama" className="flex-1 p-sm space-y-xs">
@@ -147,7 +147,7 @@ export function DashboardLayout({ title, actions, children }) {
         <div className="flex items-center gap-sm min-w-0">
           <img
             src="/images/logo.webp"
-            alt="Finora AI Logo"
+            alt="Finetra AI Logo"
             className="md:hidden h-8 w-auto object-contain shrink-0 filter drop-shadow-sm"
           />
           <h1 className="font-semibold text-lg truncate">{title}</h1>

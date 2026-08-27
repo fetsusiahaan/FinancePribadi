@@ -11,7 +11,7 @@ import { calculateScore } from "./financialScore.service.js";
  */
 function buildInsight({ income, expense, budgets, expenseByCategory, previousExpense }) {
   if (income === 0 && expense === 0) {
-    return "Belum ada transaksi bulan ini. Mulai catat pemasukan dan pengeluaran supaya Finora AI bisa menganalisis keuanganmu.";
+    return "Belum ada transaksi bulan ini. Mulai catat pemasukan dan pengeluaran supaya Finetra AI bisa menganalisis keuanganmu.";
   }
 
   const exceeded = budgets.filter((b) => b.status === "EXCEEDED");

@@ -38,8 +38,8 @@ export function Login() {
         <div className="header-left-panel">
           <div className="header-brand-box">
             <div className="finora-brand">
-              <img src="/images/logo.webp" alt="Finora AI Logo" className="brand-logo-img" />
-              <span>Finora AI</span>
+              <img src="/images/logo.webp" alt="Finetra AI Logo" className="brand-logo-img" />
+              <span>Finetra AI</span>
             </div>
           </div>
         </div>
@@ -163,7 +163,7 @@ export function Login() {
             <div className="finance-illustration">
               <img
                 src="/images/login-hero.png"
-                alt="Finora AI Showcase"
+                alt="Finetra AI Showcase"
                 className="w-full h-full object-cover"
               />
             </div>

@@ -49,10 +49,10 @@ const adminResponses = {
 export const openApiSpec = {
   openapi: "3.0.3",
   info: {
-    title: "Finora AI — Finance Pribadi API",
+    title: "Finetra AI — Finance Pribadi API",
     version: "1.0.0",
     description:
-      "Daftar endpoint REST backend Finora AI. Semua endpoint diawali prefix `/api/v1`.\n\n" +
+      "Daftar endpoint REST backend Finetra AI. Semua endpoint diawali prefix `/api/v1`.\n\n" +
       "Cara pakai di halaman ini:\n" +
       "1. Jalankan `POST /auth/login` untuk dapat `access_token`.\n" +
       "2. Klik tombol **Authorize** di kanan atas, tempel token-nya.\n" +

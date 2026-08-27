@@ -2,7 +2,7 @@ import { authenticator } from "otplib";
 import QRCode from "qrcode";
 import { env } from "../config/env.js";
 
-const ISSUER = env.totpIssuer || "Finora AI";
+const ISSUER = env.totpIssuer || "Finetra AI";
 
 export function generateSecret(email) {
   const secret = authenticator.generateSecret();

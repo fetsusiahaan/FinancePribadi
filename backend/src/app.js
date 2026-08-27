@@ -40,7 +40,7 @@ app.use(
   "/api/docs",
   swaggerUi.serve,
   swaggerUi.setup(openApiSpec, {
-    customSiteTitle: "Finora AI — API Docs",
+    customSiteTitle: "Finetra AI — API Docs",
     swaggerOptions: { persistAuthorization: true, docExpansion: "list", tagsSorter: "alpha" },
   })
 );

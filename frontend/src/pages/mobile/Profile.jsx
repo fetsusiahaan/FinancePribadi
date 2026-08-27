@@ -397,7 +397,7 @@ export function Profile() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `finora-data-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `finetra-data-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } finally {
@@ -573,7 +573,7 @@ export function Profile() {
                 </div>
               }
             />
-            <SettingRow icon="info" label="Tentang Aplikasi" value={`Finora AI v${APP_VERSION}`} />
+            <SettingRow icon="info" label="Tentang Aplikasi" value={`Finetra AI v${APP_VERSION}`} />
             <SettingRow
               icon="logout"
               label="Keluar"

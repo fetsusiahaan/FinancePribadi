@@ -53,8 +53,8 @@ export function Register() {
     <div className="finora-login-mobile">
       <header className="ml-header">
         <div className="ml-brand">
-          <img src="/images/logo.webp" alt="Finora AI Logo" className="ml-brand-logo-img" />
-          <span>Finora AI</span>
+          <img src="/images/logo.webp" alt="Finetra AI Logo" className="ml-brand-logo-img" />
+          <span>Finetra AI</span>
         </div>
         <ThemeToggle className="!border-white/40 !text-white hover:!bg-white/10" />
       </header>
@@ -78,7 +78,7 @@ export function Register() {
       <main className="ml-form-panel">
         <div className="ml-form">
           <h1>Daftar Gercep! ⚡</h1>
-          <p className="ml-subtitle">Bikin akun Finora AI kamu sekarang. Cuma butuh 2 menit kok.</p>
+          <p className="ml-subtitle">Bikin akun Finetra AI kamu sekarang. Cuma butuh 2 menit kok.</p>
 
           <form onSubmit={handleSubmit}>
             <label htmlFor="name">NAMA LENGKAP</label>

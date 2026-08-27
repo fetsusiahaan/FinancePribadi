@@ -97,10 +97,10 @@ export function AdminLayout() {
     <div className="flex items-center gap-md px-md h-16 border-b border-outline-variant/40 dark:border-dark-outline-variant/40 shrink-0">
       <img
         src="/images/logo.webp"
-        alt="Finora AI Logo"
+        alt="Finetra AI Logo"
         className="h-10 w-auto object-contain shrink-0 filter drop-shadow-sm"
       />
-      <span className="font-bold text-lg tracking-tight">Finora Admin</span>
+      <span className="font-bold text-lg tracking-tight">Finetra Admin</span>
     </div>
   );
 

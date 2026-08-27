@@ -308,7 +308,7 @@ export function Budgets() {
             <EmptyState
               icon="savings"
               title="Belum ada budget bulan ini"
-              description="Tetapkan batas anggaran per kategori. Finora AI akan mengingatkan kalau hampir habis."
+              description="Tetapkan batas anggaran per kategori. Finetra AI akan mengingatkan kalau hampir habis."
               action={
                 <Button
                   onClick={() => {
