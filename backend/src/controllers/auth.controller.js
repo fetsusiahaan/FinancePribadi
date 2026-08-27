@@ -22,6 +22,27 @@ export async function loginController(req, res, next) {
   }
 }
 
+export async function googleAuthController(req, res, next) {
+  try {
+    checkValidation(req);
+    const data = await authService.loginWithGoogle(req.body, getClientIp(req));
+    const message = data.status === "signup_required" ? "Registration required" : "Login successful";
+    res.status(200).json({ status: "success", message, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function googleSignupCompleteController(req, res, next) {
+  try {
+    checkValidation(req);
+    const data = await authService.completeGoogleSignup(req.body, getClientIp(req));
+    res.status(201).json({ status: "success", message: "User registered successfully", data });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function verifyTwoFactorController(req, res, next) {
   try {
     checkValidation(req);

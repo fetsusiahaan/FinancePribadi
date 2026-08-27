@@ -2,6 +2,7 @@ import { prisma } from "../config/db.js";
 
 export const userRepository = {
   findByEmail: (email) => prisma.user.findUnique({ where: { email } }),
+  findByGoogleId: (googleId) => prisma.user.findUnique({ where: { googleId } }),
   findById: (id) => prisma.user.findUnique({ where: { id } }),
   create: (data) => prisma.user.create({ data }),
   update: (id, data) => prisma.user.update({ where: { id }, data }),

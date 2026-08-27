@@ -216,6 +216,100 @@ export const openApiSpec = {
         },
       },
     },
+    "/auth/google": {
+      post: {
+        tags: ["Auth"],
+        summary: "Login / Register dengan Google ID Token",
+        description:
+          "Menerima `id_token` dari Google Sign-In SDK (Play Services). Server memverifikasi token ke Google.\n\n" +
+          "- Email sudah terdaftar (via password maupun Google): langsung login, `status: \"ok\"`. " +
+          "Akun password yang emailnya cocok otomatis ditautkan ke identitas Google.\n" +
+          "- Email belum terdaftar: **tidak ada user yang dibuat**. Respons `status: \"signup_required\"` " +
+          "berisi `signup_token` (JWT bertanda tangan, berlaku 15 menit) yang harus dikirim balik ke " +
+          "`/auth/google/complete` bersama password. Membatalkan di tahap ini tidak meninggalkan data apa pun.",
+        security: [],
+        requestBody: jsonBody({
+          type: "object",
+          required: ["id_token"],
+          properties: {
+            id_token: { type: "string", description: "Google ID Token (JWT) dari client SDK" },
+          },
+        }),
+        responses: {
+          200: okJson(
+            successEnvelope(
+              {
+                oneOf: [
+                  {
+                    type: "object",
+                    title: "Login berhasil",
+                    properties: {
+                      status: { type: "string", example: "ok" },
+                      user_id: { type: "string", format: "uuid" },
+                      token: { type: "string" },
+                      refresh_token: { type: "string" },
+                    },
+                  },
+                  {
+                    type: "object",
+                    title: "Perlu menyelesaikan pendaftaran",
+                    properties: {
+                      status: { type: "string", example: "signup_required" },
+                      signup_token: { type: "string", description: "Kirim ke /auth/google/complete" },
+                      email: { type: "string", format: "email" },
+                      name: { type: "string" },
+                    },
+                  },
+                ],
+              },
+              { message: "Login successful" }
+            )
+          ),
+          401: errorResponse("Google token invalid, expired, atau email belum terverifikasi"),
+          403: errorResponse("Akun disuspend"),
+          422: errorResponse("Validasi gagal"),
+        },
+      },
+    },
+    "/auth/google/complete": {
+      post: {
+        tags: ["Auth"],
+        summary: "Selesaikan pendaftaran Google dengan password",
+        description:
+          "Menutup alur `status: \"signup_required\"` dari `/auth/google`. Ini satu-satunya jalur di mana " +
+          "akun Google baru masuk ke tabel users — sebelum langkah ini tidak ada baris apa pun yang dibuat, " +
+          "sehingga `password_hash` tidak pernah tersimpan NULL. Tidak butuh Bearer token: yang dipercaya " +
+          "adalah `signup_token` bertanda tangan.",
+        security: [],
+        requestBody: jsonBody({
+          type: "object",
+          required: ["signup_token", "password"],
+          properties: {
+            signup_token: { type: "string", description: "Dari respons /auth/google" },
+            password: { type: "string", minLength: 8 },
+          },
+        }),
+        responses: {
+          201: okJson(
+            successEnvelope(
+              {
+                type: "object",
+                properties: {
+                  status: { type: "string", example: "ok" },
+                  user_id: { type: "string", format: "uuid" },
+                  token: { type: "string" },
+                  refresh_token: { type: "string" },
+                },
+              },
+              { message: "User registered successfully" }
+            ),
+            "Akun dibuat dan sesi diterbitkan"
+          ),
+          401: errorResponse("signup_token invalid atau kedaluwarsa"),
+          422: errorResponse("Validasi gagal"),
+        },
+      },
+    },
     "/auth/login/2fa-verify": {
       post: {
         tags: ["Auth"],

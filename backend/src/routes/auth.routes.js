@@ -3,6 +3,8 @@ import { body } from "express-validator";
 import {
   registerController,
   loginController,
+  googleAuthController,
+  googleSignupCompleteController,
   verifyTwoFactorController,
   setupTwoFactorController,
   confirmTwoFactorSetupController,
@@ -29,6 +31,24 @@ router.post(
     body("password").notEmpty().withMessage("Password is required"),
   ],
   loginController
+);
+
+router.post(
+  "/google",
+  [body("id_token").notEmpty().withMessage("id_token is required")],
+  googleAuthController
+);
+
+// Menutup alur pendaftaran Google: user baru baru benar-benar dibuat di sini,
+// setelah password diisi. Tidak butuh Bearer token -- yang dipercaya adalah
+// signup_token bertanda tangan dari POST /auth/google.
+router.post(
+  "/google/complete",
+  [
+    body("signup_token").notEmpty().withMessage("signup_token is required"),
+    body("password").isString().isLength({ min: 8 }).withMessage("Password must be at least 8 characters"),
+  ],
+  googleSignupCompleteController
 );
 
 router.post(

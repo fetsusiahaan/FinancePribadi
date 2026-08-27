@@ -50,7 +50,7 @@ export async function updateMe(userId, payload, ip) {
 export async function changePassword(userId, { current_password, new_password }) {
   const user = await userRepository.findById(userId);
   if (!user) throw httpError("User not found", 404);
-  if (!(await bcrypt.compare(current_password, user.passwordHash))) {
+  if (!user.passwordHash || !(await bcrypt.compare(current_password, user.passwordHash))) {
     throw httpError("Password saat ini salah", 401);
   }
   const passwordHash = await bcrypt.hash(new_password, 10);
@@ -62,7 +62,7 @@ export async function changePassword(userId, { current_password, new_password })
 export async function deleteMe(userId, { password }) {
   const user = await userRepository.findById(userId);
   if (!user) throw httpError("User not found", 404);
-  if (!(await bcrypt.compare(password, user.passwordHash))) {
+  if (!user.passwordHash || !(await bcrypt.compare(password, user.passwordHash))) {
     throw httpError("Password salah", 401);
   }
   await userRepository.remove(userId);
