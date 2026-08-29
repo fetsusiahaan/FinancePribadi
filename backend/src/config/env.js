@@ -5,7 +5,7 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "15m",
   refreshTokenExpiresDays: Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS) || 30,
-  
+  //tes
   refreshTokenCleanupIntervalMinutes:
     Number(process.env.REFRESH_TOKEN_CLEANUP_INTERVAL_MINUTES) || 60,
   
