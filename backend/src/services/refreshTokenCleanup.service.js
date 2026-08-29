@@ -29,7 +29,7 @@ export function maybeCleanupRefreshTokens() {
   sweeping = true;
 
   refreshTokenRepository
-    .deleteDead(env.refreshTokenRevokedGraceDays)
+    .deleteDead(env.refreshTokenRevokedGraceMinutes)
     .then((result) => {
       // Hanya dicatat kalau ada yang terhapus: sapuan kosong adalah keadaan
       // normal dan mayoritas, mencatatnya cuma membanjiri log.
