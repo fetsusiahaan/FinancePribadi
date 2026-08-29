@@ -10,6 +10,29 @@ export const ACTIONS = {
   "budget.deleted": { label: "Delete Budget", module: "Finance" },
   "profile.updated": { label: "Update Profile", module: "Profile" },
   "auth.login": { label: "Login", module: "Authentication" },
+
+  // Keuangan Bersama. WAJIB terdaftar di sini: logActivity() diam-diam
+  // return untuk action yang tidak dikenal (baris 17 di bawah), jadi kunci yang
+  // lupa ditambahkan berarti kehilangan data tanpa satu pun error.
+  //
+  // Catatan: ini BUKAN jejak audit yang tahan lama — activity_logs di-hard
+  // delete setelah ACTIVITY_LOG_RETENTION_DAYS. Riwayat keanggotaan dan alih
+  // kepemilikan yang permanen ada di tabel shared_finance_members dan kolom
+  // shared_finances.ownership_transferred_at.
+  "shared_finance.created": { label: "Create Shared Finance", module: "Shared Finance" },
+  "shared_finance.updated": { label: "Update Shared Finance", module: "Shared Finance" },
+  "shared_finance.archived": { label: "Archive Shared Finance", module: "Shared Finance" },
+  "shared_finance.unarchived": { label: "Unarchive Shared Finance", module: "Shared Finance" },
+  "shared_finance.deleted": { label: "Delete Shared Finance", module: "Shared Finance" },
+  "shared_finance.member_joined": { label: "Member Joined", module: "Shared Finance" },
+  "shared_finance.member_removed": { label: "Member Removed", module: "Shared Finance" },
+  "shared_finance.member_left": { label: "Member Left", module: "Shared Finance" },
+  "shared_finance.ownership_transferred": { label: "Transfer Ownership", module: "Shared Finance" },
+  "shared_finance.invitation_created": { label: "Create Invitation", module: "Shared Finance" },
+  "shared_finance.invitation_revoked": { label: "Revoke Invitation", module: "Shared Finance" },
+  "shared_transaction.created": { label: "Create Shared Transaction", module: "Shared Finance" },
+  "shared_transaction.updated": { label: "Update Shared Transaction", module: "Shared Finance" },
+  "shared_transaction.deleted": { label: "Delete Shared Transaction", module: "Shared Finance" },
 };
 
 export async function logActivity({ userId, action, ipAddress, metadata }) {

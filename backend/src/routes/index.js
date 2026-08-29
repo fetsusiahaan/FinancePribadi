@@ -6,6 +6,7 @@ import transactionRoutes from "./transaction.routes.js";
 import budgetRoutes from "./budget.routes.js";
 import userRoutes from "./user.routes.js";
 import adminRoutes from "./admin.routes.js";
+import sharedFinanceRoutes from "./sharedFinance.routes.js";
 import { maybeCleanup } from "../services/cleanup.service.js";
 
 const router = Router();
@@ -28,5 +29,6 @@ router.use("/transactions", transactionRoutes);
 router.use("/budgets", budgetRoutes);
 router.use("/users", userRoutes);
 router.use("/admin", adminRoutes);
+router.use("/shared-finances", sharedFinanceRoutes);
 
 export default router;

@@ -17,4 +17,18 @@ export const categoryRepository = {
     }),
 
   create: (data) => prisma.category.create({ data }),
+
+  // Dua fungsi di bawah khusus Keuangan Bersama: HANYA kategori global.
+  //
+  // Kategori pribadi (userId != null) tidak boleh masuk ke ruang bersama.
+  // Anggota lain tidak akan pernah bisa mengambilnya lewat findAccessible, jadi
+  // merujuknya berarti menampilkan nama kategori yang tidak bisa di-resolve —
+  // sekaligus membocorkan taksonomi pribadi si pembuat ke semua anggota.
+  findGlobal: (id) => prisma.category.findFirst({ where: { id, userId: null } }),
+
+  listGlobal: (type) =>
+    prisma.category.findMany({
+      where: { userId: null, ...(type ? { type } : {}) },
+      orderBy: [{ type: "asc" }, { name: "asc" }],
+    }),
 };

@@ -46,6 +46,15 @@ const adminResponses = {
   403: errorResponse("Bukan ADMIN"),
 };
 
+// Keuangan Bersama. Perhatikan pembagian 403 vs 404 — sengaja begini:
+// BUKAN anggota selalu 404 (keberadaan resource-nya tidak boleh bocor ke orang
+// asing), sedangkan anggota yang haknya kurang dapat 403.
+const sharedResponses = {
+  ...commonResponses,
+  403: errorResponse("Anggota, tapi bukan OWNER / hak tidak cukup"),
+  404: errorResponse("Bukan anggota, atau tidak ditemukan"),
+};
+
 export const openApiSpec = {
   openapi: "3.0.3",
   info: {
@@ -71,6 +80,12 @@ export const openApiSpec = {
     { name: "Budgets", description: "CRUD anggaran per kategori per bulan" },
     { name: "Users", description: "Profil user yang sedang login" },
     { name: "Admin", description: "Khusus role ADMIN" },
+    {
+      name: "Shared Finances",
+      description:
+        "Keuangan bersama: anggota, undangan QR, dan transaksi bersama. " +
+        "Role di sini HANYA OWNER dan MEMBER — tidak ada kaitannya dengan role global USER/ADMIN.",
+    },
   ],
   components: {
     securitySchemes: {
@@ -158,6 +173,124 @@ export const openApiSpec = {
           month_year: { type: "string", format: "date", example: "2026-08-01" },
           spent: { type: "number", example: 640000 },
           category: { $ref: "#/components/schemas/Category" },
+        },
+      },
+
+      SharedFinance: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          name: { type: "string", example: "Keuangan Keluarga" },
+          description: { type: "string", nullable: true },
+          currency: { type: "string", example: "IDR" },
+          is_archived: { type: "boolean" },
+          archived_at: { type: "string", format: "date-time", nullable: true },
+          ownership_transferred_at: {
+            type: "string",
+            format: "date-time",
+            nullable: true,
+            description: "Jejak permanen alih kepemilikan terakhir (tidak ikut terhapus retensi activity log).",
+          },
+          created_at: { type: "string", format: "date-time" },
+          member_count: { type: "integer", example: 2 },
+          my_role: { type: "string", enum: ["OWNER", "MEMBER"], nullable: true },
+        },
+      },
+      SharedFinanceMember: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", description: "ID KEANGGOTAAN, bukan user id." },
+          user: {
+            type: "object",
+            properties: {
+              id: { type: "string", format: "uuid" },
+              name: { type: "string" },
+              email: { type: "string", format: "email" },
+            },
+          },
+          role: { type: "string", enum: ["OWNER", "MEMBER"] },
+          status: { type: "string", enum: ["ACTIVE", "LEFT", "REMOVED"] },
+          joined_at: { type: "string", format: "date-time" },
+          left_at: { type: "string", format: "date-time", nullable: true },
+          is_me: { type: "boolean" },
+        },
+      },
+      SharedTransaction: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          amount: { type: "number", example: 50000 },
+          date: { type: "string", format: "date", example: "2026-08-29" },
+          description: { type: "string", nullable: true },
+          type: { type: "string", enum: ["INCOME", "EXPENSE"] },
+          category: {
+            allOf: [{ $ref: "#/components/schemas/Category" }],
+            nullable: true,
+            description: "Hanya kategori GLOBAL. Kategori pribadi ditolak 404.",
+          },
+          created_by: {
+            type: "object",
+            properties: {
+              id: { type: "string", format: "uuid" },
+              name: { type: "string" },
+            },
+          },
+          created_at: { type: "string", format: "date-time" },
+          can_edit: {
+            type: "boolean",
+            description: "Petunjuk UI saja — backend tetap menegakkan izinnya sendiri.",
+          },
+          can_delete: { type: "boolean" },
+        },
+      },
+      SharedFinanceInvitation: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          code: { type: "string", example: "8JZJW7D313" },
+          join_url: { type: "string", example: "finetra://shared-finance/join?code=8JZJW7D313" },
+          qr_data_uri: { type: "string", nullable: true, description: "PNG data URI; null kalau gagal dibuat." },
+          expires_at: { type: "string", format: "date-time", nullable: true },
+          max_uses: { type: "integer", nullable: true },
+          use_count: { type: "integer" },
+          revoked_at: { type: "string", format: "date-time", nullable: true },
+          created_at: { type: "string", format: "date-time" },
+        },
+      },
+      SharedFinancePreview: {
+        type: "object",
+        description:
+          "SENGAJA minimal. Kode undangan adalah kredensial bearer, jadi endpoint preview " +
+          "tidak boleh jadi cara membaca isi keuangan bersama: tanpa nominal, tanpa daftar anggota, tanpa transaksi.",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          name: { type: "string" },
+          description: { type: "string", nullable: true },
+          currency: { type: "string" },
+          member_count: { type: "integer" },
+          owner_name: { type: "string", nullable: true },
+          already_member: { type: "boolean" },
+        },
+      },
+      SharedFinanceSummary: {
+        type: "object",
+        properties: {
+          month: { type: "string", example: "2026-08" },
+          income: { type: "number" },
+          expense: { type: "number" },
+          balance: { type: "number" },
+          members: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                user_id: { type: "string", format: "uuid" },
+                name: { type: "string", nullable: true },
+                income: { type: "number" },
+                expense: { type: "number" },
+              },
+            },
+          },
         },
       },
     },
@@ -938,6 +1071,513 @@ export const openApiSpec = {
             )
           ),
           ...adminResponses,
+        },
+      },
+    },
+
+    // ---------------------------------------------------------------------
+    // Keuangan Bersama (PRD_KB.md)
+    // ---------------------------------------------------------------------
+    "/shared-finances": {
+      get: {
+        tags: ["Shared Finances"],
+        summary: "Daftar keuangan bersama yang saya ikuti",
+        description: "Hanya yang keanggotaannya masih ACTIVE — termasuk yang bukan saya yang buat.",
+        security: bearerAuth,
+        parameters: [
+          {
+            name: "archived",
+            in: "query",
+            schema: { type: "boolean" },
+            description: "Kosongkan untuk semua, `false` untuk yang aktif saja.",
+          },
+        ],
+        responses: {
+          200: okJson(
+            successEnvelope({ type: "array", items: { $ref: "#/components/schemas/SharedFinance" } })
+          ),
+          ...commonResponses,
+        },
+      },
+      post: {
+        tags: ["Shared Finances"],
+        summary: "Buat keuangan bersama",
+        description: "Pembuatnya otomatis jadi OWNER. Keduanya dibuat dalam satu transaksi database.",
+        security: bearerAuth,
+        requestBody: jsonBody({
+          type: "object",
+          required: ["name"],
+          properties: {
+            name: { type: "string", example: "Keuangan Keluarga" },
+            description: { type: "string", nullable: true },
+            currency: { type: "string", example: "IDR" },
+          },
+        }),
+        responses: {
+          201: okJson(
+            successEnvelope(
+              { $ref: "#/components/schemas/SharedFinance" },
+              { message: "Shared finance created" }
+            ),
+            "Dibuat"
+          ),
+          ...commonResponses,
+        },
+      },
+    },
+    "/shared-finances/categories": {
+      get: {
+        tags: ["Shared Finances"],
+        summary: "Kategori untuk transaksi bersama (GLOBAL saja)",
+        description:
+          "Kategori pribadi sengaja tidak pernah muncul di sini: anggota lain tidak akan bisa " +
+          "membacanya, dan menampilkannya akan membocorkan kategori pribadi si pembuat.",
+        security: bearerAuth,
+        parameters: [
+          { name: "type", in: "query", schema: { type: "string", enum: ["INCOME", "EXPENSE"] } },
+        ],
+        responses: {
+          200: okJson(
+            successEnvelope({ type: "array", items: { $ref: "#/components/schemas/Category" } })
+          ),
+          ...commonResponses,
+        },
+      },
+    },
+    "/shared-finances/join/validate": {
+      post: {
+        tags: ["Shared Finances"],
+        summary: "Cek kode undangan tanpa bergabung",
+        security: bearerAuth,
+        requestBody: jsonBody({
+          type: "object",
+          required: ["code"],
+          properties: { code: { type: "string", example: "8JZJW7D313" } },
+        }),
+        responses: {
+          200: okJson(
+            successEnvelope({
+              type: "object",
+              properties: {
+                valid: { type: "boolean" },
+                reason: {
+                  type: "string",
+                  nullable: true,
+                  enum: ["NOT_FOUND", "REVOKED", "EXPIRED", "MAX_USES", "ARCHIVED"],
+                },
+              },
+            })
+          ),
+          ...commonResponses,
+        },
+      },
+    },
+    "/shared-finances/join/preview": {
+      get: {
+        tags: ["Shared Finances"],
+        summary: "Pratinjau sebelum bergabung (PRD §8)",
+        security: bearerAuth,
+        parameters: [{ name: "code", in: "query", required: true, schema: { type: "string" } }],
+        responses: {
+          200: okJson(successEnvelope({ $ref: "#/components/schemas/SharedFinancePreview" })),
+          400: errorResponse("Kode tidak valid atau sudah kedaluwarsa"),
+          ...commonResponses,
+        },
+      },
+    },
+    "/shared-finances/join": {
+      post: {
+        tags: ["Shared Finances"],
+        summary: "Gabung memakai kode undangan",
+        description: "Selalu masuk sebagai MEMBER — tidak ada pilihan role saat bergabung (PRD §8).",
+        security: bearerAuth,
+        requestBody: jsonBody({
+          type: "object",
+          required: ["code"],
+          properties: { code: { type: "string" } },
+        }),
+        responses: {
+          201: okJson(
+            successEnvelope(
+              {
+                type: "object",
+                properties: { id: { type: "string", format: "uuid" }, name: { type: "string" } },
+              },
+              { message: "Joined shared finance" }
+            ),
+            "Bergabung"
+          ),
+          400: errorResponse("Kode tidak valid atau sudah kedaluwarsa"),
+          409: errorResponse("Sudah jadi anggota, atau keuangan bersama sudah diarsipkan"),
+          ...commonResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      get: {
+        tags: ["Shared Finances"],
+        summary: "Detail keuangan bersama",
+        security: bearerAuth,
+        responses: {
+          200: okJson(successEnvelope({ $ref: "#/components/schemas/SharedFinance" })),
+          ...sharedResponses,
+        },
+      },
+      patch: {
+        tags: ["Shared Finances"],
+        summary: "Ubah pengaturan (OWNER)",
+        security: bearerAuth,
+        requestBody: jsonBody({
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            description: { type: "string", nullable: true },
+            currency: { type: "string" },
+          },
+        }),
+        responses: {
+          200: okJson(
+            successEnvelope(
+              { $ref: "#/components/schemas/SharedFinance" },
+              { message: "Shared finance updated" }
+            )
+          ),
+          409: errorResponse("Sudah diarsipkan"),
+          ...sharedResponses,
+        },
+      },
+      delete: {
+        tags: ["Shared Finances"],
+        summary: "Hapus permanen (OWNER)",
+        description:
+          "Menghapus SELURUH transaksi bersama milik semua anggota. Nama harus diketik ulang " +
+          "di `confirm_name` supaya tidak bisa terjadi karena satu kali salah ketuk.",
+        security: bearerAuth,
+        requestBody: jsonBody({
+          type: "object",
+          required: ["confirm_name"],
+          properties: { confirm_name: { type: "string" } },
+        }),
+        responses: {
+          200: okJson(successEnvelope(null, { message: "Shared finance deleted" })),
+          400: errorResponse("Nama konfirmasi tidak cocok"),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/archive": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      post: {
+        tags: ["Shared Finances"],
+        summary: "Arsipkan (OWNER)",
+        description: "Jadi baca-saja dan semua undangan yang masih hidup ikut dicabut.",
+        security: bearerAuth,
+        responses: {
+          200: okJson(
+            successEnvelope(
+              { $ref: "#/components/schemas/SharedFinance" },
+              { message: "Shared finance archived" }
+            )
+          ),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/unarchive": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      post: {
+        tags: ["Shared Finances"],
+        summary: "Batalkan arsip (OWNER)",
+        security: bearerAuth,
+        responses: {
+          200: okJson(
+            successEnvelope(
+              { $ref: "#/components/schemas/SharedFinance" },
+              { message: "Shared finance unarchived" }
+            )
+          ),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/members": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      get: {
+        tags: ["Shared Finances"],
+        summary: "Daftar anggota",
+        description:
+          "`include_inactive=true` menampilkan yang sudah keluar/dikeluarkan — inilah riwayat " +
+          "keanggotaan yang permanen, karena barisnya tidak pernah benar-benar dihapus.",
+        security: bearerAuth,
+        parameters: [{ name: "include_inactive", in: "query", schema: { type: "boolean" } }],
+        responses: {
+          200: okJson(
+            successEnvelope({
+              type: "array",
+              items: { $ref: "#/components/schemas/SharedFinanceMember" },
+            })
+          ),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/members/leave": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      post: {
+        tags: ["Shared Finances"],
+        summary: "Keluar dari keuangan bersama",
+        security: bearerAuth,
+        responses: {
+          200: okJson(successEnvelope(null, { message: "Left shared finance" })),
+          409: errorResponse("OWNER harus mengalihkan kepemilikan dulu"),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/members/{memberId}": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        {
+          name: "memberId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+          description: "ID KEANGGOTAAN dari GET /members, bukan user id.",
+        },
+      ],
+      delete: {
+        tags: ["Shared Finances"],
+        summary: "Keluarkan anggota (OWNER)",
+        description: "Penutupan lunak (status REMOVED) — transaksi yang pernah dicatatnya tetap ada.",
+        security: bearerAuth,
+        responses: {
+          200: okJson(successEnvelope(null, { message: "Member removed" })),
+          409: errorResponse("OWNER tidak bisa dikeluarkan / anggota sudah tidak aktif"),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/transfer-ownership": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      post: {
+        tags: ["Shared Finances"],
+        summary: "Alihkan kepemilikan (OWNER)",
+        description:
+          "Satu transaksi database: owner lama turun jadi MEMBER, target naik jadi OWNER. " +
+          "Dijaga unique index parsial di DB, jadi kondisi 0 atau 2 owner tidak mungkin terjadi.",
+        security: bearerAuth,
+        requestBody: jsonBody({
+          type: "object",
+          required: ["new_owner_user_id"],
+          properties: { new_owner_user_id: { type: "string", format: "uuid" } },
+        }),
+        responses: {
+          200: okJson(
+            successEnvelope(
+              {
+                type: "object",
+                properties: {
+                  from_user_id: { type: "string", format: "uuid" },
+                  to_user_id: { type: "string", format: "uuid" },
+                },
+              },
+              { message: "Ownership transferred" }
+            )
+          ),
+          400: errorResponse("Tidak bisa mengalihkan ke diri sendiri"),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/invitations/current": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      get: {
+        tags: ["Shared Finances"],
+        summary: "Undangan aktif (OWNER)",
+        description: "Dibuat otomatis kalau belum ada. Berlaku 7 hari secara bawaan.",
+        security: bearerAuth,
+        responses: {
+          200: okJson(successEnvelope({ $ref: "#/components/schemas/SharedFinanceInvitation" })),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/invitations": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      post: {
+        tags: ["Shared Finances"],
+        summary: "Buat kode baru / rotasi (OWNER)",
+        description: "Seluruh kode lama langsung dicabut — QR yang sudah dibagikan jadi tidak berlaku.",
+        security: bearerAuth,
+        requestBody: jsonBody(
+          {
+            type: "object",
+            properties: {
+              expires_in_days: { type: "integer", example: 7, description: "0 = tidak kedaluwarsa." },
+              max_uses: { type: "integer", nullable: true },
+            },
+          },
+          false
+        ),
+        responses: {
+          201: okJson(
+            successEnvelope(
+              { $ref: "#/components/schemas/SharedFinanceInvitation" },
+              { message: "Invitation created" }
+            ),
+            "Dibuat"
+          ),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/invitations/{invitationId}": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        {
+          name: "invitationId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      delete: {
+        tags: ["Shared Finances"],
+        summary: "Cabut undangan (OWNER)",
+        security: bearerAuth,
+        responses: {
+          200: okJson(successEnvelope(null, { message: "Invitation revoked" })),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/transactions": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      get: {
+        tags: ["Shared Finances"],
+        summary: "Daftar transaksi bersama",
+        security: bearerAuth,
+        parameters: [
+          { name: "month", in: "query", schema: { type: "string", example: "2026-08" } },
+          { name: "type", in: "query", schema: { type: "string", enum: ["INCOME", "EXPENSE"] } },
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 20 } },
+        ],
+        responses: {
+          200: okJson(
+            successEnvelope(
+              { type: "array", items: { $ref: "#/components/schemas/SharedTransaction" } },
+              { pagination: true }
+            )
+          ),
+          ...sharedResponses,
+        },
+      },
+      post: {
+        tags: ["Shared Finances"],
+        summary: "Catat transaksi bersama",
+        description: "OWNER dan MEMBER sama-sama boleh. `category_id` wajib kategori GLOBAL.",
+        security: bearerAuth,
+        requestBody: jsonBody({
+          type: "object",
+          required: ["amount", "date", "type"],
+          properties: {
+            amount: { type: "number", example: 50000 },
+            date: { type: "string", format: "date", example: "2026-08-29" },
+            type: { type: "string", enum: ["INCOME", "EXPENSE"] },
+            category_id: { type: "string", format: "uuid", nullable: true },
+            description: { type: "string", nullable: true },
+          },
+        }),
+        responses: {
+          201: okJson(
+            successEnvelope(
+              { $ref: "#/components/schemas/SharedTransaction" },
+              { message: "Shared transaction created" }
+            ),
+            "Dibuat"
+          ),
+          409: errorResponse("Keuangan bersama sudah diarsipkan"),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/transactions/{txId}": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        { name: "txId", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      put: {
+        tags: ["Shared Finances"],
+        summary: "Ubah transaksi bersama",
+        description:
+          "MEMBER hanya boleh mengubah catatannya sendiri (403 untuk milik orang lain); " +
+          "OWNER boleh mengubah milik siapa pun.",
+        security: bearerAuth,
+        requestBody: jsonBody({
+          type: "object",
+          properties: {
+            amount: { type: "number" },
+            date: { type: "string", format: "date" },
+            type: { type: "string", enum: ["INCOME", "EXPENSE"] },
+            category_id: { type: "string", format: "uuid", nullable: true },
+            description: { type: "string", nullable: true },
+          },
+        }),
+        responses: {
+          200: okJson(
+            successEnvelope(
+              { $ref: "#/components/schemas/SharedTransaction" },
+              { message: "Shared transaction updated" }
+            )
+          ),
+          409: errorResponse("Keuangan bersama sudah diarsipkan"),
+          ...sharedResponses,
+        },
+      },
+      delete: {
+        tags: ["Shared Finances"],
+        summary: "Hapus transaksi bersama",
+        description: "Penghapusan lunak. MEMBER hanya boleh menghapus catatannya sendiri.",
+        security: bearerAuth,
+        responses: {
+          200: okJson(successEnvelope(null, { message: "Shared transaction deleted" })),
+          409: errorResponse("Keuangan bersama sudah diarsipkan"),
+          ...sharedResponses,
+        },
+      },
+    },
+    "/shared-finances/{id}/summary": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      get: {
+        tags: ["Shared Finances"],
+        summary: "Ringkasan bulanan + rincian per anggota",
+        security: bearerAuth,
+        parameters: [{ name: "month", in: "query", schema: { type: "string", example: "2026-08" } }],
+        responses: {
+          200: okJson(successEnvelope({ $ref: "#/components/schemas/SharedFinanceSummary" })),
+          ...sharedResponses,
         },
       },
     },
