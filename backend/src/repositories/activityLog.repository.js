@@ -35,4 +35,17 @@ export const activityLogRepository = {
     }),
 
   count: (filters) => prisma.activityLog.count({ where: buildWhere(filters) }),
+
+  // Buang log yang lebih tua dari retensi, untuk SEMUA user.
+  // Balikannya { count } dari Prisma.
+  //
+  // Tidak seperti refresh_tokens, di sini tidak ada baris yang "mati" — setiap
+  // log tetap sah selamanya. Yang membatasi cuma umur, dan itu keputusan
+  // kebijakan: berapa lama jejak audit masih berguna. Setelah dihapus, filter
+  // tanggal di panel admin (buildWhere di atas) tidak akan menemukan apa pun
+  // untuk rentang itu.
+  deleteOlderThan: (retentionDays) => {
+    const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+    return prisma.activityLog.deleteMany({ where: { createdAt: { lt: cutoff } } });
+  },
 };
