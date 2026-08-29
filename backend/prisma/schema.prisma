@@ -49,6 +49,11 @@ model User {
   activityLogs  ActivityLog[]
   refreshTokens RefreshToken[]
 
+  sharedFinancesCreated SharedFinance[]           @relation("SharedFinanceCreator")
+  sharedMemberships     SharedFinanceMember[]
+  sharedInvitations     SharedFinanceInvitation[] @relation("SharedInvitationCreator")
+  sharedTransactions    SharedTransaction[]       @relation("SharedTransactionCreator")
+
   @@map("users")
 }
 
@@ -72,9 +77,10 @@ model Category {
   type   CategoryType
   icon   String?
 
-  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
-  budgets      Budget[]
+  user               User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions       Transaction[]
+  budgets            Budget[]
+  sharedTransactions SharedTransaction[]
 
   @@map("categories")
 }
@@ -151,4 +157,132 @@ model Debt {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("debts")
+}
+
+// ---------------------------------------------------------------------------
+// Keuangan Bersama (lihat PRD_KB.md)
+//
+// Sengaja tabel sendiri, TIDAK menumpang `transactions`. Seluruh modul keuangan
+// pribadi (dashboard, budget, financial score) membaca `transactions` dengan
+// `where: { userId }`; menambahkan kolom "shared" ke sana berarti setiap query
+// lama harus ikut menyaringnya dan satu yang terlewat langsung membocorkan uang
+// bersama ke total pribadi. Dengan tabel terpisah, modul lama aman tanpa diubah
+// satu baris pun.
+// ---------------------------------------------------------------------------
+
+model SharedFinance {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  currency    String  @default("IDR")
+
+  isArchived Boolean   @default(false) @map("is_archived")
+  archivedAt DateTime? @map("archived_at")
+
+  createdBy String @map("created_by")
+
+  // Jejak alih kepemilikan yang PERMANEN. Tidak bisa mengandalkan activity_logs:
+  // barisnya di-hard delete setelah ACTIVITY_LOG_RETENTION_DAYS (default 5 hari)
+  // oleh sapuan di cleanup.service.js. "Siapa mengalihkan kepemilikan ke siapa"
+  // adalah fakta tata kelola, bukan telemetri.
+  ownershipTransferredAt DateTime? @map("ownership_transferred_at")
+  previousOwnerUserId    String?   @map("previous_owner_user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  creator      User                      @relation("SharedFinanceCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  members      SharedFinanceMember[]
+  invitations  SharedFinanceInvitation[]
+  transactions SharedTransaction[]
+
+  @@index([createdBy])
+  @@map("shared_finances")
+}
+
+model SharedFinanceMember {
+  id              String @id @default(uuid())
+  sharedFinanceId String @map("shared_finance_id")
+  userId          String @map("user_id")
+
+  // String + CHECK, bukan enum Prisma: PRD §5/§6 memang meminta VARCHAR(20) +
+  // CHECK, dan preseden `SavingsGoal.status` sudah memakai pola yang sama.
+  // Nilai sahnya dijaga constraint di migration.sql.
+  role   String @default("MEMBER") // OWNER | MEMBER
+  status String @default("ACTIVE") // ACTIVE | LEFT | REMOVED
+
+  // Baris ini TIDAK PERNAH dihapus, bahkan saat anggota dikeluarkan — statusnya
+  // yang berubah. Itu yang membuat transaksi lamanya tetap bisa diatribusikan,
+  // sekaligus jadi riwayat keanggotaan yang tahan sapuan activity_logs.
+  joinedAt DateTime  @default(now()) @map("joined_at")
+  leftAt   DateTime? @map("left_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  sharedFinance SharedFinance @relation(fields: [sharedFinanceId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Invariant "tepat satu OWNER aktif" (PRD §7/§10) TIDAK ada di sini: Prisma
+  // tidak bisa menyatakan unique index parsial. Index-nya ditulis tangan di
+  // migration.sql sebagai uq_shared_finance_single_active_owner.
+  @@unique([sharedFinanceId, userId], map: "uq_shared_finance_member")
+  @@index([userId, status])
+  @@map("shared_finance_members")
+}
+
+model SharedFinanceInvitation {
+  id              String @id @default(uuid())
+  sharedFinanceId String @map("shared_finance_id")
+  code            String @unique
+
+  createdBy String    @map("created_by")
+  expiresAt DateTime? @map("expires_at")
+  maxUses   Int?      @map("max_uses")
+  useCount  Int       @default(0) @map("use_count")
+  revokedAt DateTime? @map("revoked_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  sharedFinance SharedFinance @relation(fields: [sharedFinanceId], references: [id], onDelete: Cascade)
+  creator       User          @relation("SharedInvitationCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([sharedFinanceId])
+  @@map("shared_finance_invitations")
+}
+
+model SharedTransaction {
+  id              String @id @default(uuid())
+  sharedFinanceId String @map("shared_finance_id")
+  createdByUserId String @map("created_by_user_id")
+
+  // Nullable dan HANYA boleh menunjuk kategori global (categories.user_id IS
+  // NULL). Kategori pribadi milik satu anggota tidak akan pernah bisa diambil
+  // anggota lain, jadi merujuknya berarti menampilkan nama yang tidak bisa
+  // di-resolve sekaligus membocorkan taksonomi pribadi si pembuat.
+  categoryId String? @map("category_id")
+
+  // Didenormalisasi dari kategori supaya menghapus kategori tidak pernah
+  // merusak tanda INCOME/EXPENSE baris yang sudah tercatat.
+  type CategoryType
+
+  amount      Decimal
+  date        DateTime @db.Date
+  description String?
+
+  deletedAt DateTime? @map("deleted_at")
+
+  // Ada di sini, tapi tidak ada di `Transaction`. Di tabel dengan banyak
+  // penulis, urutan "siapa mencatat terakhir" harus stabil; memakai id uuid v4
+  // sebagai tiebreak seperti transaksi pribadi berarti urutannya acak.
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  sharedFinance SharedFinance @relation(fields: [sharedFinanceId], references: [id], onDelete: Cascade)
+  createdBy     User          @relation("SharedTransactionCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  category      Category?     @relation(fields: [categoryId], references: [id])
+
+  @@index([sharedFinanceId, date])
+  @@index([sharedFinanceId, deletedAt])
+  @@map("shared_transactions")
 }
