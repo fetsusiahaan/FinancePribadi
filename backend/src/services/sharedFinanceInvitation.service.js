@@ -18,7 +18,7 @@ function httpError(message, status) {
 // kombinasi acak tidak pernah membentuk kata yang tidak pantas.
 const ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 const CODE_LENGTH = 10;
-const DEFAULT_EXPIRY_DAYS = 7;
+const DEFAULT_EXPIRY_MINUTES = 30;
 
 function randomCode() {
   const bytes = crypto.randomBytes(CODE_LENGTH);
@@ -70,14 +70,17 @@ async function buildQr(invitation) {
   }
 }
 
-async function issue(membership, { expires_in_days, max_uses }) {
+async function issue(membership, { expires_in_minutes, max_uses }) {
   const code = await generateUniqueCode();
-  const days = expires_in_days === undefined ? DEFAULT_EXPIRY_DAYS : Number(expires_in_days);
+  const minutes =
+    expires_in_minutes === undefined
+      ? DEFAULT_EXPIRY_MINUTES
+      : Number(expires_in_minutes);
   const invitation = await sharedFinanceInvitationRepository.create({
     sharedFinanceId: membership.sharedFinanceId,
     code,
     createdBy: membership.userId,
-    expiresAt: days > 0 ? new Date(Date.now() + days * 86400000) : null,
+    expiresAt: minutes > 0 ? new Date(Date.now() + minutes * 60 * 1000) : null,
     maxUses: max_uses ? Number(max_uses) : null,
   });
   return invitation;
@@ -85,9 +88,14 @@ async function issue(membership, { expires_in_days, max_uses }) {
 
 export async function getCurrent(membership) {
   let invitation = await sharedFinanceInvitationRepository.findCurrent(membership.sharedFinanceId);
-  // Dibuat otomatis kalau belum ada: owner membuka layar "Undang Anggota" justru
-  // untuk mendapatkan kode, jadi memaksanya menekan tombol dulu tidak ada gunanya.
-  if (!invitation) invitation = await issue(membership, {});
+  // Dibuat otomatis kalau belum ada atau jika sudah lewat masa berlaku (expired):
+  const isExpired = invitation?.expiresAt && new Date(invitation.expiresAt) <= new Date();
+  if (!invitation || isExpired) {
+    if (isExpired) {
+      await sharedFinanceInvitationRepository.revokeAllFor(membership.sharedFinanceId);
+    }
+    invitation = await issue(membership, {});
+  }
   return toDto(invitation, { qrDataUri: await buildQr(invitation) });
 }
 

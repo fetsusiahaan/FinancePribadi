@@ -147,7 +147,7 @@ router.post(
   "/:id/invitations",
   [
     idRule,
-    body("expires_in_days").optional().isInt({ min: 0, max: 365 }),
+    body("expires_in_minutes").optional().isInt({ min: 1, max: 10080 }),
     body("max_uses").optional({ nullable: true }).isInt({ min: 1, max: 1000 }),
   ],
   requireMembership(P.MANAGE_MEMBERS),
