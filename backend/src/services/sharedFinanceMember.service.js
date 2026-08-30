@@ -12,7 +12,12 @@ export function toDto(member, currentUserId) {
   return {
     id: member.id,
     user: member.user
-      ? { id: member.user.id, name: member.user.name, email: member.user.email }
+      ? {
+          id: member.user.id,
+          name: member.user.name,
+          email: member.user.email,
+          avatar: member.user.avatar || null,
+        }
       : null,
     role: member.role,
     status: member.status,

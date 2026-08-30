@@ -31,16 +31,13 @@ export const sharedFinanceMemberRepository = {
   findById: (id, sharedFinanceId) =>
     prisma.sharedFinanceMember.findFirst({
       where: { id, sharedFinanceId },
-      include: { user: { select: { id: true, name: true, email: true } } },
+      include: { user: { select: { id: true, name: true, email: true, avatar: true } } },
     }),
 
-  // `select` di relasi user WAJIB sempit. User.avatar adalah data URI base64
-  // yang bisa belasan MB (lihat komentarnya di schema.prisma); include tanpa
-  // select akan menyeretnya untuk SETIAP anggota di setiap pemuatan daftar.
   list: (sharedFinanceId, { includeInactive = false } = {}) =>
     prisma.sharedFinanceMember.findMany({
       where: { sharedFinanceId, ...(includeInactive ? {} : { status: "ACTIVE" }) },
-      include: { user: { select: { id: true, name: true, email: true } } },
+      include: { user: { select: { id: true, name: true, email: true, avatar: true } } },
       // role ascending: "MEMBER" < "OWNER" secara alfabet, jadi diurutkan
       // menurun supaya OWNER muncul paling atas seperti mockup PRD §9.
       orderBy: [{ role: "desc" }, { joinedAt: "asc" }],
