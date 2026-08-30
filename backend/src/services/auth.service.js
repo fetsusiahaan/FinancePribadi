@@ -65,19 +65,21 @@ async function issueSession(user, ip) {
 }
 
 export async function register({ name, email, password }) {
-  const existing = await userRepository.findByEmail(email);
+  const normalizedEmail = email.trim().toLowerCase();
+  const existing = await userRepository.findByEmail(normalizedEmail);
   if (existing) {
     throw httpError("Email already registered", 409);
   }
   const passwordHash = await bcrypt.hash(password, 10);
-  const user = await userRepository.create({ name, email, passwordHash });
+  const user = await userRepository.create({ name, email: normalizedEmail, passwordHash });
   const token = signToken({ sub: user.id, role: user.role });
   const refresh_token = await issueRefreshToken(user.id);
   return { user_id: user.id, token, refresh_token };
 }
 
 export async function login({ email, password }, ip) {
-  const user = await userRepository.findByEmail(email);
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await userRepository.findByEmail(normalizedEmail);
   if (!user || !user.passwordHash || !(await bcrypt.compare(password, user.passwordHash))) {
     throw httpError("Invalid email or password", 401);
   }

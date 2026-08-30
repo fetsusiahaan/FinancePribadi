@@ -1,7 +1,13 @@
 import { prisma } from "../config/db.js";
 
 export const userRepository = {
-  findByEmail: (email) => prisma.user.findUnique({ where: { email } }),
+  findByEmail: (email) => {
+    if (!email) return null;
+    const normalized = email.trim().toLowerCase();
+    return prisma.user.findFirst({
+      where: { email: { equals: normalized, mode: "insensitive" } },
+    });
+  },
   findByGoogleId: (googleId) => prisma.user.findUnique({ where: { googleId } }),
   findById: (id) => prisma.user.findUnique({ where: { id } }),
 
@@ -10,8 +16,21 @@ export const userRepository = {
   // kecil jauh lebih murah daripada satu query yang selalu menyeret blob.
   findAvatarById: (id) =>
     prisma.user.findUnique({ where: { id }, select: { avatar: true, updatedAt: true } }),
-  create: (data) => prisma.user.create({ data }),
-  update: (id, data) => prisma.user.update({ where: { id }, data }),
+  create: (data) =>
+    prisma.user.create({
+      data: {
+        ...data,
+        email: data.email ? data.email.trim().toLowerCase() : data.email,
+      },
+    }),
+  update: (id, data) =>
+    prisma.user.update({
+      where: { id },
+      data: {
+        ...data,
+        ...(data.email ? { email: data.email.trim().toLowerCase() } : {}),
+      },
+    }),
   remove: (id) => prisma.user.delete({ where: { id } }),
 
   findAllPaginated: ({ skip, take, search }) => {
