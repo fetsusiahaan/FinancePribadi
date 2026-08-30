@@ -96,6 +96,7 @@ function dispatchSharedTxPush(membership, tx, { edited }) {
         category_name: tx.category?.name ?? "",
         description: tx.description ?? "",
         edited,
+        timestamp: Date.now(),
       });
     } catch {
       // Diam - push gagal tidak boleh ganggu flow utama
