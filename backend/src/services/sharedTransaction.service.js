@@ -4,6 +4,7 @@ import { categoryRepository } from "../repositories/category.repository.js";
 import { parseMonth } from "../utils/period.js";
 import { can, P } from "./sharedFinance.constants.js";
 import { logActivity } from "./activityLog.service.js";
+import { sendToUsers } from "./pushNotification.service.js";
 
 function httpError(message, status) {
   const err = new Error(message);
@@ -74,6 +75,34 @@ export async function list(membership, { page = 1, limit = 20, type, month }) {
   };
 }
 
+function dispatchSharedTxPush(membership, tx, { edited }) {
+  Promise.resolve().then(async () => {
+    try {
+      const members = await sharedFinanceMemberRepository.list(membership.sharedFinanceId);
+      const recipientIds = members
+        .map((m) => m.userId)
+        .filter((id) => id !== membership.userId);
+
+      if (recipientIds.length === 0) return;
+
+      await sendToUsers(recipientIds, {
+        type: "shared_transaction",
+        shared_finance_id: membership.sharedFinanceId,
+        shared_transaction_id: tx.id,
+        shared_finance_name: membership.sharedFinance?.name ?? "",
+        creator_name: tx.createdBy?.name ?? "",
+        amount: Number(tx.amount),
+        tx_type: tx.type,
+        category_name: tx.category?.name ?? "",
+        description: tx.description ?? "",
+        edited,
+      });
+    } catch {
+      // Diam - push gagal tidak boleh ganggu flow utama
+    }
+  });
+}
+
 export async function create(membership, { amount, date, type, category_id, description }, ip) {
   await assertGlobalCategory(category_id, type);
 
@@ -97,6 +126,9 @@ export async function create(membership, { amount, date, type, category_id, desc
       amount: Number(tx.amount),
     },
   });
+
+  dispatchSharedTxPush(membership, tx, { edited: false });
+
   return toDto(tx, membership);
 }
 
@@ -137,6 +169,9 @@ export async function update(membership, txId, payload, ip) {
     ipAddress: ip,
     metadata: { shared_finance_id: membership.sharedFinanceId, shared_transaction_id: tx.id },
   });
+
+  dispatchSharedTxPush(membership, tx, { edited: true });
+
   return toDto(tx, membership);
 }
 

@@ -7,6 +7,7 @@ import budgetRoutes from "./budget.routes.js";
 import userRoutes from "./user.routes.js";
 import adminRoutes from "./admin.routes.js";
 import sharedFinanceRoutes from "./sharedFinance.routes.js";
+import deviceTokenRoutes from "./deviceToken.routes.js";
 import { maybeCleanup } from "../services/cleanup.service.js";
 
 const router = Router();
@@ -30,5 +31,6 @@ router.use("/budgets", budgetRoutes);
 router.use("/users", userRoutes);
 router.use("/admin", adminRoutes);
 router.use("/shared-finances", sharedFinanceRoutes);
+router.use("/users/me/device-tokens", deviceTokenRoutes);
 
 export default router;

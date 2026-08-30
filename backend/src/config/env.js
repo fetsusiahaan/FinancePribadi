@@ -31,4 +31,13 @@ export const env = {
   activityLogRetentionDays: Number(process.env.ACTIVITY_LOG_RETENTION_DAYS) || 5,
   totpIssuer: process.env.TOTP_ISSUER || "Finetra AI",
   googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID,
+  firebaseServiceAccount: (() => {
+    const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64;
+    if (!b64) return null;
+    try {
+      return JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
+    } catch {
+      return null;
+    }
+  })(),
 };
