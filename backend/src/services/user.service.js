@@ -128,6 +128,31 @@ export async function deleteAvatar(userId, ip) {
   return toDto(user);
 }
 
+// Memeriksa password user yang SEDANG login, tanpa efek samping.
+//
+// Dipakai klien untuk mengunci aksi sensitif di balik konfirmasi identitas
+// (mis. mengarsipkan keuangan bersama di Android). Sengaja tidak memakai
+// POST /auth/login untuk itu: login menerbitkan token baru dan merotasi sesi,
+// efek samping yang tidak ada hubungannya dengan aksi yang dikonfirmasi, dan
+// alurnya bisa bercabang ke 2FA.
+//
+// Tidak menerbitkan token, tidak menyentuh sesi, tidak mengubah satu baris pun
+// -- balasannya cuma "cocok" atau 401. Karena itu pula ia tinggal di
+// user.service (butuh Bearer, identitasnya dari req.userId) dan bukan di
+// auth.service yang melayani permintaan tanpa token.
+//
+// passwordHash bisa NULL untuk akun yang mendaftar lewat Google dan belum
+// pernah menyetel password. Itu ditolak sama seperti password salah -- jangan
+// dibedakan pesannya, dan JANGAN diloloskan: hash kosong bukan izin masuk.
+// Sisi klien harus menyediakan jalan lain (sidik jari) untuk akun seperti itu.
+export async function verifyPassword(userId, { password }) {
+  const user = await userRepository.findById(userId);
+  if (!user) throw httpError("User not found", 404);
+  if (!user.passwordHash || !(await bcrypt.compare(password, user.passwordHash))) {
+    throw httpError("Password salah", 401);
+  }
+}
+
 export async function changePassword(userId, { current_password, new_password }) {
   const user = await userRepository.findById(userId);
   if (!user) throw httpError("User not found", 404);

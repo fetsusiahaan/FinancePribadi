@@ -61,6 +61,20 @@ export async function deleteAvatar(req, res, next) {
   }
 }
 
+export async function verifyPassword(req, res, next) {
+  try {
+    checkValidation(req);
+    await userService.verifyPassword(req.userId, req.body);
+    // Tanpa `data`: yang ditanyakan cuma cocok atau tidak, dan jawabannya
+    // sudah ada di status kode. Password salah keluar sebagai 401 lewat
+    // errorHandler, bukan sebagai 200 bermuatan { valid: false } -- klien
+    // tidak boleh bisa salah membaca kegagalan sebagai keberhasilan.
+    res.json({ status: "success", message: "Password verified" });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function changePassword(req, res, next) {
   try {
     checkValidation(req);

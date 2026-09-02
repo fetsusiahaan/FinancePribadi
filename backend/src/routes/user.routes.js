@@ -4,6 +4,7 @@ import { requireAuth } from "../middlewares/auth.middleware.js";
 import {
   getMe,
   updateMe,
+  verifyPassword,
   changePassword,
   getAvatar,
   updateAvatar,
@@ -41,6 +42,14 @@ router
     updateAvatar
   )
   .delete(deleteAvatar);
+
+// POST, bukan GET: password ada di body, dan body pada GET tidak dijamin
+// diteruskan proxy. POST juga menahan request ini keluar dari log/riwayat URL.
+router.post(
+  "/me/verify-password",
+  [body("password").isString().isLength({ min: 1 }).withMessage("Password is required")],
+  verifyPassword
+);
 
 router.put(
   "/me/password",
