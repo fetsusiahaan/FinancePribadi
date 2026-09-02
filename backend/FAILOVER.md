@@ -275,6 +275,44 @@ Yang dibuktikan latihan ini dan tidak bisa dibuktikan dokumen: standby benar-ben
 
 Catat berapa lama langkah 2 memakan waktu. Angka itu yang sebenarnya berlaku saat kejadian, bukan target di kepala.
 
+## Kolom waktu berisi jam Jakarta, bukan UTC
+
+Sejak migrasi `20260902143500_store_time_as_jakarta`, seluruh kolom `timestamp`
+di database menyimpan **jam dinding WIB**, bukan UTC. Buka `users.created_at` di
+Supabase Studio dan angkanya langsung sama dengan jam di layar ponsel.
+
+Tipenya tetap `timestamp without time zone` — kolomnya tidak membawa zona, jadi
+yang menjaga artinya adalah kode, bukan database:
+
+- **`src/config/timezone.js`** menggeser `+7 jam` saat menulis dan `−7 jam` saat
+  membaca. Dua arah. Menghapus salah satu arah membuat seluruh jam meleset 7 jam
+  **tanpa error apa pun** — tidak ada yang gagal, angkanya saja yang salah.
+- **Migrasi di atas** menggeser data lama satu kali. Tidak idempoten:
+  menjalankan file SQL-nya manual dua kali menggeser data 14 jam.
+- Kolom `DATE` (`transactions.date`, `budgets.month_year`, `debts.due_date`,
+  `savings_goals.deadline`, `shared_transactions.date`) **tidak** digeser —
+  menggesernya akan memindahkan tanggalnya satu hari.
+
+Yang penting saat failover dan restore:
+
+- **Backup dari slot berisi WIB, restore ke slot mana pun tetap WIB.** `pg_dump`
+  membawa nilai apa adanya dan kolomnya tanpa zona, jadi tidak ada konversi
+  diam-diam saat pindah region (Seoul → Singapura → Neon). Tidak ada langkah
+  tambahan.
+- **Jangan jalankan file migrasi itu manual** di standby. `prisma migrate
+  deploy` mencatat di `_prisma_migrations` dan tidak akan mengulang; psql tidak
+  punya perlindungan itu.
+- Kalau standby diisi dari dump **sebelum** 2 September 2026, isinya masih UTC
+  sementara kode sudah menggeser — seluruh jam akan tampil mundur 7 jam. Ciri
+  paling cepat: `SELECT max(created_at) FROM users` jauh lebih kecil dari jam WIB
+  sekarang. Perbaikannya menjalankan UPDATE `+ INTERVAL '7 hours'` di migrasi
+  itu satu kali, bukan mengubah kode.
+
+Yang menghapus seluruh kerumitan ini adalah mengubah kolomnya ke `timestamptz`,
+bukan menghapus `timezone.js`.
+
+---
+
 ## Yang lebih layak dikerjakan untuk anti-down
 
 Ditemukan sambil memeriksa hal di atas. Ketiganya lebih dekat ke tujuan "anti-down" daripada load balancing, dan tidak menambah kuota sama sekali. Dicatat supaya tidak hilang — **belum dikerjakan.**

@@ -4,10 +4,23 @@ import { userRepository } from "../repositories/user.repository.js";
 import { transactionRepository } from "../repositories/transaction.repository.js";
 import * as budgetService from "./budget.service.js";
 import { prisma } from "../config/db.js";
-import { parseMonth, previousMonth } from "../utils/period.js";
+import { parseMonth, previousMonth, nowInJakarta, asTimestampBound } from "../utils/period.js";
 
-function todayRangeUTC() {
-  const now = new Date();
+/**
+ * Batas "hari ini" menurut kalender Jakarta, bukan UTC.
+ *
+ * Dulu memakai `new Date()` mentah, sehingga antara pukul 00:00 dan 07:00 WIB
+ * "hari ini" masih menunjuk tanggal kemarin. Akibatnya angka "transaksi hari
+ * ini" dan "user baru hari ini" di panel admin kosong sepanjang pagi buta lalu
+ * melompat pukul 07:00 -- terlihat seperti data hilang, padahal batasnya yang
+ * salah.
+ *
+ * Batasnya sendiri tetap tengah malam UTC karena dibandingkan dengan kolom
+ * DATE dan dengan created_at; yang berubah cuma TANGGAL mana yang dianggap
+ * hari ini.
+ */
+function todayRange() {
+  const now = nowInJakarta();
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
   return { start, end };
@@ -102,9 +115,19 @@ export async function deleteUser(actorId, targetId) {
 }
 
 export async function getOverview() {
-  const { start: todayStart, end: todayEnd } = todayRangeUTC();
+  const { start: todayStart, end: todayEnd } = todayRange();
   const thisMonth = parseMonth();
   const lastMonth = previousMonth(thisMonth);
+
+  // Batas yang sama, dua bentuk. `transactions.date` bertipe DATE dan memakai
+  // batas kalender apa adanya; `users.created_at` bertipe TIMESTAMP yang
+  // digeser timezone.js, jadi batasnya harus dikonversi lebih dulu. Memakai
+  // satu bentuk untuk keduanya membuat salah satunya meleset 7 jam --
+  // lihat asTimestampBound() di utils/period.js.
+  const todayStartTs = asTimestampBound(todayStart);
+  const todayEndTs = asTimestampBound(todayEnd);
+  const thisMonthTs = { start: asTimestampBound(thisMonth.start), end: asTimestampBound(thisMonth.end) };
+  const lastMonthTs = { start: asTimestampBound(lastMonth.start), end: asTimestampBound(lastMonth.end) };
 
   const [
     totalUsers,
@@ -123,9 +146,9 @@ export async function getOverview() {
     userRepository.count(),
     userRepository.countBySuspended(false),
     userRepository.countBySuspended(true),
-    userRepository.countCreatedBetween(todayStart, todayEnd),
-    userRepository.countCreatedBetween(thisMonth.start, thisMonth.end),
-    userRepository.countCreatedBetween(lastMonth.start, lastMonth.end),
+    userRepository.countCreatedBetween(todayStartTs, todayEndTs),
+    userRepository.countCreatedBetween(thisMonthTs.start, thisMonthTs.end),
+    userRepository.countCreatedBetween(lastMonthTs.start, lastMonthTs.end),
     prisma.transaction.count(),
     prisma.transaction.count({ where: { date: { gte: todayStart, lt: todayEnd } } }),
     prisma.transaction.aggregate({ _sum: { amount: true } }),

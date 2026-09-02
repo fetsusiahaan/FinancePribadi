@@ -1,6 +1,6 @@
 import { prisma } from "../config/db.js";
 import { transactionRepository } from "../repositories/transaction.repository.js";
-import { parseMonth, previousMonth } from "../utils/period.js";
+import { parseMonth, previousMonth, nowInJakarta } from "../utils/period.js";
 import { toDto as transactionDto } from "./transaction.service.js";
 import * as budgetService from "./budget.service.js";
 import { calculateScore } from "./financialScore.service.js";
@@ -142,7 +142,11 @@ function startOfWeek(d) {
  * bukan N+1 query per bucket seperti getCashflow.
  */
 export async function getRangeCashflow(userId, range = "this_week") {
-  const now = new Date();
+  // Jakarta, bukan UTC: kartu arus kas menandai "hari ini" dan batas minggu.
+  // Dengan `new Date()` mentah, user yang membuka aplikasi sebelum pukul 07:00
+  // WIB melihat hari kemarin sebagai hari terakhir, dan tiap Senin pagi
+  // "Minggu Ini" masih menampilkan minggu lalu.
+  const now = nowInJakarta();
   const today = utcDay(now);
   const safeRange = ["this_week", "last_week", "this_month"].includes(range) ? range : "this_week";
 

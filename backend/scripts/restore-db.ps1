@@ -186,7 +186,7 @@ $users  = & $psql $TargetUrl -t -A -c "SELECT count(*) FROM users"
 Write-Host "  tabel                : $tables (harus 14)"
 Write-Host "  CHECK constraint     : $checks (harus 3)"
 Write-Host "  partial unique index : $uq (harus 1)"
-Write-Host "  migrasi selesai      : $mig (harus 10)"
+Write-Host "  migrasi selesai      : $mig (harus 11)"
 Write-Host "  baris users          : $users"
 
 if ("$checks" -ne '3' -or "$uq" -ne '1') {
