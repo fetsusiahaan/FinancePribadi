@@ -63,11 +63,34 @@ export async function updateMe(userId, payload, ip) {
   return toDto(user);
 }
 
-export async function getAvatar(userId) {
+/**
+ * ETag lemah untuk avatar. `updatedAt` berubah setiap kali baris user disentuh
+ * -- termasuk saat user cuma ganti nama -- jadi tag ini bisa berubah walau
+ * fotonya sama. Konsekuensinya cuma satu unduhan ekstra yang tidak perlu,
+ * bukan foto basi: arah kesalahannya sengaja dipilih yang aman.
+ */
+function avatarEtag(updatedAt) {
+  return `W/"avatar-${new Date(updatedAt).getTime()}"`;
+}
+
+export async function getAvatar(userId, ifNoneMatch) {
   const row = await userRepository.findAvatarById(userId);
   if (!row) throw httpError("User not found", 404);
   if (!row.avatar) throw httpError("Avatar not set", 404);
-  return { avatar: row.avatar, updated_at: row.updatedAt };
+
+  const etag = avatarEtag(row.updatedAt);
+
+  // Kalau tag klien masih cocok, blob base64-nya (bisa megabyte-an) tidak
+  // dikirim sama sekali. Ini pemangkas egress terbesar di aplikasi ini: avatar
+  // hampir tidak pernah berubah tapi diminta ulang tiap cold start.
+  //
+  // `includes`, bukan `===`: If-None-Match sah berisi daftar dipisah koma, dan
+  // sebagian proxy menambahi sufiks pada tag lemah.
+  if (ifNoneMatch && ifNoneMatch.includes(etag)) {
+    return { notModified: true, etag };
+  }
+
+  return { avatar: row.avatar, updated_at: row.updatedAt, etag };
 }
 
 export async function updateAvatar(userId, avatar, ip) {

@@ -1,6 +1,57 @@
 import "dotenv/config";
 
+// --- Pemilihan database -----------------------------------------------------
+// Tiga URL tersedia di .env, SATU yang dipakai. DATABASE_ACTIVE menentukan
+// yang mana. Ini failover manual, bukan load balance: alasannya di FAILOVER.md.
+//
+// Divalidasi di sini, saat proses start, BUKAN dibiarkan gagal di query
+// pertama. Bedanya nyata: DATABASE_ACTIVE=2 dengan slot kosong akan membuat
+// Prisma menyambung ke string kosong dan errornya muncul sebagai kegagalan
+// query di request acak beberapa menit kemudian -- tepat saat failover, tepat
+// saat paling tidak ada waktu untuk menebak.
+const DB_SLOTS = ["1", "2", "3"];
+
+function resolveDatabaseUrl() {
+  const active = String(process.env.DATABASE_ACTIVE ?? "1").trim();
+
+  if (!DB_SLOTS.includes(active)) {
+    throw new Error(
+      `DATABASE_ACTIVE="${active}" tidak valid. Isi dengan 1, 2, atau 3 (lihat backend/.env).`
+    );
+  }
+
+  const url = (process.env[`DATABASE_URL_${active}`] || "").trim();
+  if (!url) {
+    throw new Error(
+      `DATABASE_ACTIVE=${active} tapi DATABASE_URL_${active} kosong di .env. ` +
+        `Isi slot itu dulu, atau tunjuk slot lain.`
+    );
+  }
+
+  // Slot lain yang terisi dengan URL yang sama tidak diperiksa: menyalin URL
+  // yang sama ke dua slot memang tidak berbahaya (tetap satu database), cuma
+  // membuat failover ke slot itu tidak menolong apa-apa.
+  return { active, url };
+}
+
+const database = resolveDatabaseUrl();
+
+// Prisma membaca env("DATABASE_URL") dari process.env, jadi hasil pilihan di
+// atas ditimpakan ke sana. Ini WAJIB berjalan sebelum PrismaClient dibuat --
+// config/db.js mengimpor modul ini lebih dulu untuk memastikan urutannya.
+//
+// Baris DATABASE_URL di .env sengaja tetap ada dan tetap dipakai apa adanya
+// oleh Prisma CLI (migrate/studio/db pull), yang tidak menjalankan kode kita.
+process.env.DATABASE_URL = database.url;
+
+/** Host saja, tanpa kredensial -- aman untuk log dan panel admin. */
+export function activeDbHost() {
+  const m = database.url.match(/@([^/:?]+)/);
+  return m ? m[1] : "(tidak terbaca)";
+}
+
 export const env = {
+  databaseSlot: database.active,
   port: process.env.PORT || 4000,
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "15m",

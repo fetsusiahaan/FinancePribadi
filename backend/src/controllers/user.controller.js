@@ -23,7 +23,19 @@ export async function updateMe(req, res, next) {
 
 export async function getAvatar(req, res, next) {
   try {
-    const data = await userService.getAvatar(req.userId);
+    const result = await userService.getAvatar(req.userId, req.headers["if-none-match"]);
+    res.set("ETag", result.etag);
+    // private: isinya foto milik satu user, tidak boleh disimpan proxy bersama.
+    // no-cache bukan berarti "jangan cache" -- artinya boleh disimpan tapi
+    // wajib divalidasi ulang ke server tiap kali, yang persis jalur 304 di
+    // bawah. Tanpa validasi ulang, foto lama bisa bertahan setelah user
+    // menggantinya.
+    res.set("Cache-Control", "private, no-cache");
+
+    // 304 WAJIB tanpa body. Itu inti penghematannya.
+    if (result.notModified) return res.status(304).end();
+
+    const { etag, ...data } = result;
     res.json({ status: "success", data });
   } catch (err) {
     next(err);

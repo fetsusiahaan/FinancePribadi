@@ -11,6 +11,15 @@ export const categoryRepository = {
       orderBy: [{ type: "asc" }, { name: "asc" }],
     }),
 
+  // Kategori milik user saja. Dipisah dari listForUser supaya bagian global
+  // bisa dilayani dari cache di category.service.js sementara bagian pribadi
+  // (yang tidak boleh di-cache) tetap segar dari DB.
+  listOwn: (userId, type) =>
+    prisma.category.findMany({
+      where: { userId, ...(type ? { type } : {}) },
+      orderBy: [{ type: "asc" }, { name: "asc" }],
+    }),
+
   findAccessible: (id, userId) =>
     prisma.category.findFirst({
       where: { id, OR: [{ userId: null }, { userId }] },

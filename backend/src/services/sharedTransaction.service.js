@@ -1,6 +1,7 @@
 import { sharedTransactionRepository } from "../repositories/sharedTransaction.repository.js";
 import { sharedFinanceMemberRepository } from "../repositories/sharedFinanceMember.repository.js";
 import { categoryRepository } from "../repositories/category.repository.js";
+import { listGlobalCached } from "./category.service.js";
 import { parseMonth } from "../utils/period.js";
 import { can, P } from "./sharedFinance.constants.js";
 import { logActivity } from "./activityLog.service.js";
@@ -46,7 +47,9 @@ async function assertGlobalCategory(categoryId, type) {
 }
 
 export async function listCategories(type) {
-  const rows = await categoryRepository.listGlobal(type);
+  // Lewat cache bersama di category.service.js -- isinya sama persis dengan
+  // listGlobal, cuma tidak menembak DB tiap kali layar transaksi bersama dibuka.
+  const rows = await listGlobalCached(type);
   return rows.map((c) => ({ id: c.id, name: c.name, type: c.type, icon: c.icon }));
 }
 

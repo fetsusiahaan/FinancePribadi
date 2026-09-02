@@ -10,6 +10,12 @@ frontend/dist/
 logs/
 npm-debug.log*
 
+# Dump database (backend/scripts/backup-db.ps1). Isinya SELURUH data user —
+# email, hash password, transaksi, foto profil. Tidak boleh ikut ter-commit.
+_migration/
+*.sql.bak
+backup-*.sql
+
 # Android RN app — tidak ikut di-commit/push
 android-apk/
 
