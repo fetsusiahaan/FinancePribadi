@@ -1,15 +1,21 @@
 import { refreshTokenRepository } from "../repositories/refreshToken.repository.js";
 import { activityLogRepository } from "../repositories/activityLog.repository.js";
+import { sharedFinanceInvitationRepository } from "../repositories/sharedFinanceInvitation.repository.js";
 import { env } from "../config/env.js";
 
 // Pembersih baris mati / kedaluwarsa, dibonceng GET /health.
 //
-// Menangani dua tabel dengan alasan berbeda:
+// Menangani tiga tabel dengan alasan berbeda:
 // - refresh_tokens: baris yang sudah dicabut/kedaluwarsa. Sudah tidak bisa
 //   dipakai login sebelum dihapus — penghapusannya murni soal ruang disk.
 // - activity_logs: baris yang lebih tua dari retensi. Ini BEDA: log-nya masih
 //   sah dan masih terbaca di panel admin sampai detik penghapusannya. Yang
 //   membatasi cuma kebijakan umur, bukan status mati.
+// - shared_finance_invitations: undangan QR yang expiresAt-nya sudah lewat.
+//   Sama seperti refresh_tokens — sudah ditolak rejectionReason() sebelum
+//   dihapus, jadi ini soal ruang, bukan keamanan. Yang dihapus HANYA yang
+//   kedaluwarsa; undangan yang dicabut manual lewat rotate()/revoke() sengaja
+//   ditinggalkan karena hitungan pemakaiannya masih jadi jejak.
 //
 // Kenapa di /health dan bukan cron: tidak ada scheduler di project ini, dan
 // /health adalah satu-satunya endpoint yang dipanggil berkala oleh klien tanpa
@@ -66,10 +72,12 @@ export function maybeCleanup() {
   Promise.allSettled([
     refreshTokenRepository.deleteDead(env.refreshTokenRevokedGraceMinutes),
     activityLogRepository.deleteOlderThan(env.activityLogRetentionDays),
+    sharedFinanceInvitationRepository.deleteExpired(),
   ])
-    .then(([tokens, logs]) => {
+    .then(([tokens, logs, invitations]) => {
       report("refresh_tokens", tokens);
       report("activity_logs", logs);
+      report("shared_finance_invitations", invitations);
     })
     .finally(() => {
       sweeping = false;

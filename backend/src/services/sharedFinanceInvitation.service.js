@@ -92,7 +92,16 @@ export async function getCurrent(membership) {
   const isExpired = invitation?.expiresAt && new Date(invitation.expiresAt) <= new Date();
   if (!invitation || isExpired) {
     if (isExpired) {
-      await sharedFinanceInvitationRepository.revokeAllFor(membership.sharedFinanceId);
+      // DIHAPUS, bukan dicabut. Undangan kedaluwarsa sudah tidak bisa dipakai
+      // masuk sejak detik expiresAt-nya lewat (rejectionReason menolaknya
+      // lebih dulu), jadi menyimpan barisnya tidak menambah keamanan apa pun --
+      // cuma menumpuk baris mati di database yang kuotanya terbatas.
+      //
+      // Bedanya dengan rotate(): kode yang dirotasi manual tetap DICABUT, bukan
+      // dihapus, karena "kode ini sempat dipakai berapa kali sebelum saya
+      // ganti" adalah pertanyaan yang masuk akal. Kode yang mati sendiri karena
+      // waktu tidak menyimpan jawaban yang dicari siapa pun.
+      await sharedFinanceInvitationRepository.deleteExpiredFor(membership.sharedFinanceId);
     }
     invitation = await issue(membership, {});
   }
