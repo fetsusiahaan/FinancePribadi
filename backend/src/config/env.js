@@ -31,36 +31,63 @@ function resolveDatabaseUrl() {
   // Slot lain yang terisi dengan URL yang sama tidak diperiksa: menyalin URL
   // yang sama ke dua slot memang tidak berbahaya (tetap satu database), cuma
   // membuat failover ke slot itu tidak menolong apa-apa.
-  return { active, url: withPoolLimits(url) };
+  return { active, url: forRuntime(url) };
 }
 
-// Tanpa connection_limit eksplisit, Prisma memakai (jumlah core x 2) + 1 --
-// 17 koneksi di mesin 8 core. Pooler Supabase membatasi 15, jadi pool yang
-// terisi penuh menabrak plafonnya dan query ke-16 gagal dengan
-// "FATAL: (EMAXCONNSESSION) max clients reached". Gejalanya menyesatkan: muncul
-// hanya saat padat, hilang lagi saat sepi, dan endpoint yang tidak menyentuh DB
-// (mis. /health) tetap 200 seolah database baik-baik saja.
+// --- Pooler runtime ---------------------------------------------------------
 //
-// 8, bukan 15: satu proses tidak boleh menghabiskan seluruh jatah. Sisanya
-// dipakai psql saat restore (lihat FAILOVER.md), Prisma Studio, dan proses
-// backend kedua yang menunjuk database sama -- masing-masing membuka poolnya
-// sendiri, dan batasnya dihitung per database, bukan per proses.
+// URL di .env memakai port 5432 (SESSION pooler) karena itu yang bisa dipakai
+// psql -- restore-db.ps1 bergantung padanya, dan slot yang tidak bisa direstore
+// bukan standby (lihat FAILOVER.md). Tapi session pooler memberi SATU koneksi
+// Postgres per klien selama klien itu hidup, dengan plafon 15. Prisma menahan
+// poolnya, jadi satu-dua instance backend saja sudah menghabiskannya dan
+// koneksi berikutnya ditolak:
+//
+//   FATAL: (EMAXCONNSESSION) max clients reached ... pool_size: 15
+//
+// Gejalanya menyesatkan: proses yang SEDANG jalan tetap sehat (koneksinya sudah
+// terbuka) sementara setiap koneksi BARU gagal, jadi /health menjawab 200
+// seolah database baik-baik saja sementara request pengguna jadi 500.
+// Menurunkan connection_limit hanya menggeser batasnya, tidak menghilangkannya.
+//
+// Port 6543 (TRANSACTION pooler) memakai koneksi bergantian per transaksi, dan
+// plafonnya ratusan. Itu yang dipakai APLIKASI. Yang tetap di 5432:
+//   - Prisma CLI (migrate/studio/db pull) -- membaca DATABASE_URL dari .env
+//     langsung dan tidak menjalankan berkas ini. `migrate` WAJIB lewat session
+//     pooler; DDL-nya butuh sesi yang menetap.
+//   - restore-db.ps1 (psql), yang menolak query param `pgbouncer` mentah-mentah.
+//
+// Jadi pemisahannya bukan gaya penulisan: satu port untuk lalu lintas request,
+// satu port untuk perkakas yang butuh sesi utuh.
+const SESSION_POOLER_PORT = "5432";
+const TRANSACTION_POOLER_PORT = "6543";
+
+// Prisma harus tahu ia bicara dengan pgbouncer: tanpa ini ia memakai prepared
+// statement bernama, yang tidak bertahan saat koneksi dipindah antar transaksi.
+// Kegagalannya acak dan menyesatkan ("prepared statement s0 already exists"),
+// bukan error saat start.
+const PGBOUNCER_FLAG = "pgbouncer";
+
+// Batas pool tetap dipasang meski plafon transaction pooler jauh lebih longgar:
+// ia jadi pagar kalau suatu saat URL menunjuk balik ke session pooler, dan
+// mencegah satu instance membuka koneksi tak terbatas saat lonjakan.
 const DEFAULT_CONNECTION_LIMIT = 8;
 // Antre menunggu koneksi kosong, bukan langsung gagal. Lonjakan sesaat lebih
 // baik jadi request yang lambat daripada 500 ke pengguna.
 const DEFAULT_POOL_TIMEOUT = 20;
 
 /**
- * Pasang batas pool ke URL yang belum menyebutkannya.
+ * Ubah URL dari .env menjadi URL yang dipakai proses ini.
  *
- * Ditaruh di sini, bukan diketik di tiap DATABASE_URL_n di .env, supaya slot
- * yang ditambahkan nanti ikut terlindungi tanpa bergantung pada orang yang
- * menyalin URL dari dashboard provider ingat menempelkan query param.
+ * Ditaruh di kode, bukan diketik di tiap DATABASE_URL_n, karena .env harus
+ * tetap berisi URL yang bisa dipakai psql apa adanya. Menaruh `pgbouncer=true`
+ * di sana akan mematahkan restore-db.ps1 -- persis jebakan yang sudah dicatat
+ * di FAILOVER.md.
  *
- * Yang SUDAH menyebut nilainya sendiri tidak disentuh -- itu jalan keluar saat
- * satu slot butuh angka berbeda.
+ * Nilai yang SUDAH disebut di URL tidak ditimpa, termasuk portnya: slot yang
+ * memang perlu port lain (Neon tidak punya pooler Supabase) tetap apa adanya.
  */
-function withPoolLimits(rawUrl) {
+function forRuntime(rawUrl) {
   let parsed;
   try {
     parsed = new URL(rawUrl);
@@ -68,6 +95,14 @@ function withPoolLimits(rawUrl) {
     // URL tak terbaca dibiarkan apa adanya: kegagalannya harus datang dari
     // Prisma dengan pesannya sendiri, bukan dari pemasangan query param di sini.
     return rawUrl;
+  }
+
+  // Hanya pooler Supabase yang punya pasangan port 5432/6543. Provider lain
+  // (Neon di slot 3) tidak, dan memindahkan portnya akan menunjuk ke ketiadaan.
+  const isSupabasePooler = parsed.hostname.endsWith(".pooler.supabase.com");
+  if (isSupabasePooler && parsed.port === SESSION_POOLER_PORT) {
+    parsed.port = TRANSACTION_POOLER_PORT;
+    parsed.searchParams.set(PGBOUNCER_FLAG, "true");
   }
 
   if (!parsed.searchParams.has("connection_limit")) {
