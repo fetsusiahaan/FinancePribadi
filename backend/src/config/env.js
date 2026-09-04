@@ -31,7 +31,52 @@ function resolveDatabaseUrl() {
   // Slot lain yang terisi dengan URL yang sama tidak diperiksa: menyalin URL
   // yang sama ke dua slot memang tidak berbahaya (tetap satu database), cuma
   // membuat failover ke slot itu tidak menolong apa-apa.
-  return { active, url };
+  return { active, url: withPoolLimits(url) };
+}
+
+// Tanpa connection_limit eksplisit, Prisma memakai (jumlah core x 2) + 1 --
+// 17 koneksi di mesin 8 core. Pooler Supabase membatasi 15, jadi pool yang
+// terisi penuh menabrak plafonnya dan query ke-16 gagal dengan
+// "FATAL: (EMAXCONNSESSION) max clients reached". Gejalanya menyesatkan: muncul
+// hanya saat padat, hilang lagi saat sepi, dan endpoint yang tidak menyentuh DB
+// (mis. /health) tetap 200 seolah database baik-baik saja.
+//
+// 8, bukan 15: satu proses tidak boleh menghabiskan seluruh jatah. Sisanya
+// dipakai psql saat restore (lihat FAILOVER.md), Prisma Studio, dan proses
+// backend kedua yang menunjuk database sama -- masing-masing membuka poolnya
+// sendiri, dan batasnya dihitung per database, bukan per proses.
+const DEFAULT_CONNECTION_LIMIT = 8;
+// Antre menunggu koneksi kosong, bukan langsung gagal. Lonjakan sesaat lebih
+// baik jadi request yang lambat daripada 500 ke pengguna.
+const DEFAULT_POOL_TIMEOUT = 20;
+
+/**
+ * Pasang batas pool ke URL yang belum menyebutkannya.
+ *
+ * Ditaruh di sini, bukan diketik di tiap DATABASE_URL_n di .env, supaya slot
+ * yang ditambahkan nanti ikut terlindungi tanpa bergantung pada orang yang
+ * menyalin URL dari dashboard provider ingat menempelkan query param.
+ *
+ * Yang SUDAH menyebut nilainya sendiri tidak disentuh -- itu jalan keluar saat
+ * satu slot butuh angka berbeda.
+ */
+function withPoolLimits(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    // URL tak terbaca dibiarkan apa adanya: kegagalannya harus datang dari
+    // Prisma dengan pesannya sendiri, bukan dari pemasangan query param di sini.
+    return rawUrl;
+  }
+
+  if (!parsed.searchParams.has("connection_limit")) {
+    parsed.searchParams.set("connection_limit", String(DEFAULT_CONNECTION_LIMIT));
+  }
+  if (!parsed.searchParams.has("pool_timeout")) {
+    parsed.searchParams.set("pool_timeout", String(DEFAULT_POOL_TIMEOUT));
+  }
+  return parsed.toString();
 }
 
 const database = resolveDatabaseUrl();
