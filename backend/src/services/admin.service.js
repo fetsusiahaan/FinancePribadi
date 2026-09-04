@@ -209,6 +209,26 @@ export async function listPlanGrants(targetId) {
   return { items: await planService.listGrants(targetId) };
 }
 
+/**
+ * Isi halaman Subscription > Plans: daftar akun berbayar + ringkasan hitungan.
+ *
+ * Ringkasannya ikut di sini, bukan diambil ulang dari /admin/overview, karena
+ * halaman ini tidak boleh memaksa pemanggilnya menembak dua endpoint dan
+ * merakit sendiri -- dan ringkasan yang datang dari respons berbeda bisa
+ * terbaca dari titik waktu berbeda dengan daftarnya.
+ *
+ * Yang TIDAK ada di sini: katalog paket yang bisa diedit (harga, limit). Belum
+ * ada harga di mana pun dan TIER_LIMITS sengaja masih kosong; halaman ini
+ * menampilkan siapa berlangganan apa, bukan mengatur apa isi paketnya.
+ */
+export async function listPlans({ page = 1, pageSize = 20, tier = null } = {}) {
+  const [accounts, totalUsers] = await Promise.all([
+    planService.listGrantedAccounts({ page, pageSize, tier }),
+    userRepository.count({ search: "" }),
+  ]);
+  return { ...accounts, summary: await planService.summarizeTiers(totalUsers) };
+}
+
 export async function resetPassword(targetId) {
   const target = await userRepository.findById(targetId);
   if (!target) throw httpError("User not found", 404);

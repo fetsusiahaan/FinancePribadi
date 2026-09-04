@@ -1,4 +1,5 @@
 import { userPlanRepository } from "../repositories/userPlan.repository.js";
+import { sendToUsers } from "./pushNotification.service.js";
 import { TIER, TIER_VALUES, PREMIUM_DURATION_DAYS } from "./plan.constants.js";
 
 function httpError(message, status) {
@@ -66,15 +67,21 @@ export function premiumExpiryFrom(currentRow, now = new Date()) {
   return new Date(remaining.getTime() + PREMIUM_DURATION_DAYS * DAY_MS);
 }
 
-export async function setTier(actorId, targetId, { tier, note = null }) {
+export async function setTier(actorId, targetId, { tier, note = null }, now = new Date()) {
   if (!TIER_VALUES.includes(tier)) throw httpError("Invalid tier", 400);
+
+  // Dibaca SEKALI dan dipakai dua kali: menghitung tanggal habis, dan menentukan
+  // apakah ini perpanjangan atau pemberian baru. Membacanya lagi setelah tulis
+  // akan mengembalikan baris yang sudah tertimpa -- tier lamanya hilang, dan
+  // setiap perpanjangan akan terbaca sebagai pemberian baru.
+  const currentRow = await userPlanRepository.findByUserId(targetId);
+  const wasActive = resolveTier(currentRow, now) === TIER.PREMIUM;
 
   // Tanggal habis TIDAK PERNAH datang dari pemanggil. PREMIUM selalu 30 hari
   // menurut PREMIUM_DURATION_DAYS; FREE dan LIFETIME tidak punya masa berlaku
   // sama sekali, dan menyimpan tanggal di sana akan jadi jebakan bagi pembaca
   // berikutnya.
-  const expiresAt =
-    tier === TIER.PREMIUM ? premiumExpiryFrom(await userPlanRepository.findByUserId(targetId)) : null;
+  const expiresAt = tier === TIER.PREMIUM ? premiumExpiryFrom(currentRow, now) : null;
 
   const [planRow] = await userPlanRepository.setTier(targetId, {
     tier,
@@ -82,6 +89,25 @@ export async function setTier(actorId, targetId, { tier, note = null }) {
     grantedById: actorId,
     note,
   });
+
+  // Push dikirim SETELAH transaksi DB berhasil, dan kegagalannya tidak
+  // membatalkan pemberian: sendToUsers menelan errornya sendiri, jadi FCM yang
+  // sedang mati tidak boleh membuat admin mengira tier gagal diberikan padahal
+  // sudah tersimpan.
+  //
+  // `note` sengaja TIDAK ikut. Isinya ditulis untuk sesama admin ("transfer BCA
+  // a.n. Budi") dan bisa memuat nama atau alasan internal yang tidak pantas
+  // mendarat di layar kunci user.
+  await sendToUsers([targetId], {
+    type: "plan_granted",
+    tier,
+    // Perpanjangan dibedakan dari pemberian baru supaya user yang memperpanjang
+    // tahu hari lamanya tidak hangus -- tanggal di pesannya sudah termasuk sisa
+    // yang ditumpuk.
+    renewed: tier === TIER.PREMIUM && wasActive,
+    expires_at: expiresAt ? expiresAt.toISOString() : "",
+  });
+
   return toPlanDto(planRow);
 }
 
@@ -96,6 +122,46 @@ export async function listGrants(userId) {
     granted_by: g.grantedBy ? { id: g.grantedBy.id, name: g.grantedBy.name, email: g.grantedBy.email } : null,
     created_at: g.createdAt,
   }));
+}
+
+/**
+ * Daftar akun yang pernah di-grant, untuk halaman admin Subscription > Plans.
+ *
+ * Dua tier dikirim sekaligus dan itu disengaja: `tier` adalah yang tersimpan,
+ * `effective_tier` adalah yang berlaku menurut resolveTier. Keduanya sama untuk
+ * hampir semua baris, dan berbeda tepat pada kasus yang paling ingin dilihat
+ * admin -- PREMIUM yang sudah lewat tanggal. Mengirim satu saja akan
+ * menyembunyikan kasus itu: hanya `tier` membuatnya tampak masih berlangganan,
+ * hanya `effective_tier` membuatnya tak bisa dibedakan dari akun yang memang
+ * belum pernah bayar.
+ *
+ * expires_at dikirim APA ADANYA, tidak dinolkan seperti di toPlanDto. Di layar
+ * pelanggan justru tanggal lewat itulah isinya: "habis 12 hari lalu".
+ */
+export async function listGrantedAccounts({ page = 1, pageSize = 20, tier = null } = {}, now = new Date()) {
+  const filter = tier && TIER_VALUES.includes(tier) ? tier : null;
+  const skip = (page - 1) * pageSize;
+  const [rows, total] = await Promise.all([
+    userPlanRepository.listGranted({ skip, take: pageSize, tier: filter }),
+    userPlanRepository.countGranted({ tier: filter }),
+  ]);
+
+  return {
+    items: rows.map((row) => ({
+      user_id: row.userId,
+      name: row.user?.name ?? null,
+      email: row.user?.email ?? null,
+      is_suspended: row.user?.isSuspended ?? false,
+      tier: row.tier,
+      effective_tier: resolveTier(row, now),
+      expires_at: row.expiresAt,
+      starts_at: row.startsAt,
+      updated_at: row.updatedAt,
+    })),
+    page,
+    page_size: pageSize,
+    total,
+  };
 }
 
 // Hitungan akun per tier untuk panel admin. Baris user_plans hanya ada untuk

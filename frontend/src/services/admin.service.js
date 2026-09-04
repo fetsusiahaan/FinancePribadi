@@ -11,3 +11,14 @@ export const updateSuspend = (id, isSuspended) =>
   api.patch(`/admin/users/${id}/suspend`, { is_suspended: isSuspended }).then((r) => r.data.data);
 export const deleteUser = (id) => api.delete(`/admin/users/${id}`).then((r) => r.data);
 export const resetPassword = (id) => api.post(`/admin/users/${id}/reset-password`).then((r) => r.data.data);
+
+// Masa berlaku TIDAK dikirim dari sini. Server yang menghitungnya (30 hari,
+// ditumpuk di atas sisa yang belum terpakai), dan endpoint-nya memang menolak
+// `expires_at`. Tambahkan parameter tanggal di sini dan yang terjadi bukan
+// error, melainkan field yang diam-diam diabaikan.
+export const updateTier = (id, tier, note) =>
+  api.patch(`/admin/users/${id}/tier`, { tier, note: note || null }).then((r) => r.data.data);
+
+export const listPlanGrants = (id) => api.get(`/admin/users/${id}/plan-grants`).then((r) => r.data.data);
+
+export const listPlans = (params) => api.get("/admin/plans", { params }).then((r) => r.data.data);

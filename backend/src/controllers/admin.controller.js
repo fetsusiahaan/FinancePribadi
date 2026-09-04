@@ -111,6 +111,17 @@ export async function listPlanGrantsController(req, res, next) {
   }
 }
 
+export async function listPlansController(req, res, next) {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number(req.query.page_size) || 20));
+    const data = await adminService.listPlans({ page, pageSize, tier: req.query.tier || null });
+    res.json({ status: "success", data });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function resetPasswordController(req, res, next) {
   try {
     const data = await adminService.resetPassword(req.params.id);

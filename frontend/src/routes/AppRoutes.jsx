@@ -13,7 +13,16 @@ import { AdminComingSoon } from "../pages/desktop/admin/ComingSoon";
 import { AdminOverview } from "../pages/desktop/admin/Overview";
 import { AdminSystemHealth } from "../pages/desktop/admin/SystemHealth";
 import { AdminUserActivity } from "../pages/desktop/admin/UserActivity";
+import { AdminPlans } from "../pages/desktop/admin/Plans";
 import { ADMIN_FLAT_ROUTES } from "../config/adminNav";
+
+const IMPLEMENTED_ADMIN_PATHS = new Set([
+  "/admin",
+  "/admin/users",
+  "/admin/system-health",
+  "/admin/users/activity",
+  "/admin/subscription/plans",
+]);
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -99,13 +108,11 @@ export function AppRoutes() {
         <Route path="users" element={<AdminUsers />} />
         <Route path="system-health" element={<AdminSystemHealth />} />
         <Route path="users/activity" element={<AdminUserActivity />} />
-        {ADMIN_FLAT_ROUTES.filter(
-          (r) =>
-            r.path !== "/admin" &&
-            r.path !== "/admin/users" &&
-            r.path !== "/admin/system-health" &&
-            r.path !== "/admin/users/activity"
-        ).map((r) => (
+        <Route path="subscription/plans" element={<AdminPlans />} />
+        {/* Sisa nav admin di-render sebagai ComingSoon. Tiap halaman nyata di
+            atas HARUS ada di IMPLEMENTED_ADMIN_PATHS, kalau tidak path yang sama
+            terdaftar dua kali dan yang menang adalah placeholder-nya. */}
+        {ADMIN_FLAT_ROUTES.filter((r) => !IMPLEMENTED_ADMIN_PATHS.has(r.path)).map((r) => (
           <Route
             key={r.path}
             path={r.path.replace("/admin/", "")}

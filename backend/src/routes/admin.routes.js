@@ -14,6 +14,7 @@ import {
   resetPasswordController,
   updateTierController,
   listPlanGrantsController,
+  listPlansController,
 } from "../controllers/admin.controller.js";
 import { TIER_VALUES } from "../services/plan.constants.js";
 
@@ -25,6 +26,12 @@ router.get("/overview", getOverviewController);
 router.get("/system-health", getSystemHealthController);
 router.get("/activity", listActivityController);
 router.get("/users", listUsersController);
+
+// Daftar akun berbayar. Terpisah dari /users karena yang dicari adalah irisan
+// kecil (yang pernah di-grant), bukan halaman ke-sekian dari seluruh akun --
+// dan /users tidak punya penyaringan tier sama sekali.
+router.get("/plans", listPlansController);
+
 router.get("/users/:id", getUserDetailController);
 
 router.patch(

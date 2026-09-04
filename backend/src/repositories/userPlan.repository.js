@@ -75,6 +75,32 @@ export const userPlanRepository = {
       )
     ),
 
+  // Daftar akun yang PERNAH di-grant, untuk halaman Subscription > Plans.
+  //
+  // Sumbernya user_plans, bukan users: yang dicari justru akun berbayar, dan
+  // menyaringnya dari seluruh tabel users berarti memindai akun FREE yang
+  // jumlahnya jauh lebih banyak hanya untuk membuangnya lagi.
+  //
+  // PREMIUM kedaluwarsa TETAP ikut terbawa. Barisnya masih ada, dan halaman itu
+  // memang perlu menampilkannya -- resolveTier() yang menurunkannya jadi FREE
+  // saat DTO dibentuk, bukan query ini.
+  //
+  // Urutan expiresAt menaik dengan null terakhir: yang paling dekat habis di
+  // atas, LIFETIME (tanpa tanggal) di bawah. Itu urutan yang berguna untuk
+  // pekerjaan sesungguhnya di halaman ini -- menagih perpanjangan.
+  listGranted: ({ skip = 0, take = 20, tier = null } = {}) =>
+    prisma.userPlan.findMany({
+      where: tier ? { tier } : {},
+      skip,
+      take,
+      orderBy: [{ expiresAt: { sort: "asc", nulls: "last" } }, { updatedAt: "desc" }],
+      include: {
+        user: { select: { id: true, name: true, email: true, isSuspended: true } },
+      },
+    }),
+
+  countGranted: ({ tier = null } = {}) => prisma.userPlan.count({ where: tier ? { tier } : {} }),
+
   countByTier: () => prisma.userPlan.groupBy({ by: ["tier"], _count: { _all: true } }),
 
   countExpiredPremium: (now = new Date()) =>
