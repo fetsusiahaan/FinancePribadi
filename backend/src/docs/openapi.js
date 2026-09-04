@@ -128,6 +128,18 @@ export const openApiSpec = {
           name: { type: "string", example: "Fetsu" },
           email: { type: "string", format: "email" },
           role: { type: "string", enum: ["USER", "ADMIN"] },
+          tier: {
+            type: "string",
+            enum: ["FREE", "PREMIUM", "LIFETIME"],
+            description:
+              "Tier yang BERLAKU, bukan isi kolom mentah: PREMIUM yang lewat masa berlaku dilaporkan FREE. Berbeda dari `role` — `role` soal akses panel admin, `tier` soal batas pemakaian.",
+          },
+          tier_expires_at: {
+            type: "string",
+            format: "date-time",
+            nullable: true,
+            description: "Hanya terisi untuk PREMIUM yang masih berlaku. FREE dan LIFETIME selalu null.",
+          },
           phone: { type: "string", nullable: true },
           profession: { type: "string", nullable: true },
           income_range: { type: "number", nullable: true },
@@ -1032,6 +1044,59 @@ export const openApiSpec = {
         }),
         responses: {
           200: okJson(successEnvelope({ $ref: "#/components/schemas/User" }, { message: "Role updated" })),
+          ...adminResponses,
+        },
+      },
+    },
+    "/admin/users/{id}/tier": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      patch: {
+        tags: ["Admin"],
+        summary: "Ubah tier user",
+        description:
+          "Pemberian tier manual — dipakai setelah pembayaran diverifikasi di luar sistem. Tiap panggilan menulis satu baris riwayat permanen di plan_grants.\n\nMasa berlaku TIDAK bisa dikirim: PREMIUM selalu 30 hari, dihitung server. Sisa hari yang belum terpakai DITUMPUK — memperpanjang saat sisa 10 hari menghasilkan 40 hari, bukan 30. PREMIUM yang sudah kedaluwarsa memulai lagi dari nol. FREE dan LIFETIME tidak punya masa berlaku.",
+        security: bearerAuth,
+        requestBody: jsonBody({
+          type: "object",
+          required: ["tier"],
+          properties: {
+            tier: { type: "string", enum: ["FREE", "PREMIUM", "LIFETIME"] },
+            note: { type: "string", nullable: true, maxLength: 200, example: "transfer BCA 12 Jan" },
+          },
+        }),
+        responses: {
+          200: okJson(
+            successEnvelope(
+              {
+                type: "object",
+                properties: {
+                  tier: { type: "string", enum: ["FREE", "PREMIUM", "LIFETIME"] },
+                  tier_expires_at: { type: "string", format: "date-time", nullable: true },
+                },
+              },
+              { message: "Tier updated" }
+            )
+          ),
+          400: errorResponse("Tier tidak valid"),
+          404: errorResponse("User tidak ditemukan"),
+          ...adminResponses,
+        },
+      },
+    },
+    "/admin/users/{id}/plan-grants": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      get: {
+        tags: ["Admin"],
+        summary: "Riwayat pemberian tier satu user",
+        description: "Append-only, terbaru dulu. granted_by null berarti diberikan sistem, bukan tidak diketahui.",
+        security: bearerAuth,
+        responses: {
+          200: okJson(successEnvelope({ type: "object" })),
+          404: errorResponse("User tidak ditemukan"),
           ...adminResponses,
         },
       },

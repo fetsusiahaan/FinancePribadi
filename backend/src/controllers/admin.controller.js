@@ -89,6 +89,28 @@ export async function deleteUserController(req, res, next) {
   }
 }
 
+export async function updateTierController(req, res, next) {
+  try {
+    checkValidation(req);
+    const data = await adminService.updateTier(req.userId, req.params.id, {
+      tier: req.body.tier,
+      note: req.body.note ?? null,
+    });
+    res.json({ status: "success", message: "Tier updated", data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function listPlanGrantsController(req, res, next) {
+  try {
+    const data = await adminService.listPlanGrants(req.params.id);
+    res.json({ status: "success", data });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function resetPasswordController(req, res, next) {
   try {
     const data = await adminService.resetPassword(req.params.id);

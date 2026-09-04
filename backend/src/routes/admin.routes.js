@@ -12,7 +12,10 @@ import {
   updateSuspendController,
   deleteUserController,
   resetPasswordController,
+  updateTierController,
+  listPlanGrantsController,
 } from "../controllers/admin.controller.js";
+import { TIER_VALUES } from "../services/plan.constants.js";
 
 const router = Router();
 
@@ -35,6 +38,24 @@ router.patch(
   [body("is_suspended").isBoolean().withMessage("is_suspended must be a boolean")],
   updateSuspendController
 );
+
+// Pemberian tier manual. Inilah yang membuat sistem ini bisa dipakai sebelum
+// ada payment gateway: admin menyetel tier setelah transfer masuk, dan
+// plan_grants menyimpan siapa memberi apa, kapan, dengan catatan apa.
+//
+// TIDAK ada `expires_at` di sini, sengaja: masa berlaku PREMIUM adalah aturan
+// produk (30 hari, PREMIUM_DURATION_DAYS) yang dihitung server, bukan angka yang
+// boleh diketik pemanggil.
+router.patch(
+  "/users/:id/tier",
+  [
+    body("tier").isIn(TIER_VALUES).withMessage(`Tier must be one of ${TIER_VALUES.join(", ")}`),
+    body("note").optional({ nullable: true }).isLength({ max: 200 }).withMessage("Note max 200 chars"),
+  ],
+  updateTierController
+);
+
+router.get("/users/:id/plan-grants", listPlanGrantsController);
 
 router.delete("/users/:id", deleteUserController);
 

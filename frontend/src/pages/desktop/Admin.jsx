@@ -8,6 +8,7 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { Table } from "../../components/ui/Table";
 import { Pagination } from "../../components/ui/Pagination";
+import { TierBadge } from "../../components/ui/TierBadge";
 import { ScoreGauge } from "../../components/charts/ScoreGauge";
 import { DonutChart } from "../../components/charts/DonutChart";
 import { formatIDR, formatDate } from "../../utils/format";
@@ -136,6 +137,7 @@ function UserListView({ onSelect }) {
               { key: "name", label: "Nama" },
               { key: "email", label: "Email" },
               { key: "role", label: "Role" },
+              { key: "tier", label: "Tier" },
               { key: "status", label: "Status" },
               { key: "score", label: "Skor" },
               { key: "joined", label: "Bergabung" },
@@ -156,6 +158,9 @@ function UserListView({ onSelect }) {
                     <td className="px-md py-sm text-on-surface-variant dark:text-dark-on-surface-variant">{u.email}</td>
                     <td className="px-md py-sm">
                       <RoleBadge role={u.role} />
+                    </td>
+                    <td className="px-md py-sm">
+                      <TierBadge tier={u.tier} />
                     </td>
                     <td className="px-md py-sm">
                       <StatusBadge suspended={u.is_suspended} />
@@ -277,8 +282,14 @@ function UserDetailView({ userId, onBack }) {
             <p className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant">{user.email}</p>
             <div className="flex items-center gap-xs mt-xs">
               <RoleBadge role={user.role} />
+              <TierBadge tier={user.tier} />
               <StatusBadge suspended={user.is_suspended} />
             </div>
+            {user.tier_expires_at && (
+              <p className="text-label-sm text-on-surface-variant dark:text-dark-on-surface-variant mt-xs">
+                Premium berlaku sampai {formatDate(user.tier_expires_at.slice(0, 10))}
+              </p>
+            )}
           </div>
           {user.financial_score != null && (
             <ScoreGauge score={user.financial_score} label={scoreLabel(user.financial_score)} size={96} />

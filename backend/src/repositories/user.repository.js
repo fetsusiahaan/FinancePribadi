@@ -9,7 +9,10 @@ export const userRepository = {
     });
   },
   findByGoogleId: (googleId) => prisma.user.findUnique({ where: { googleId } }),
-  findById: (id) => prisma.user.findUnique({ where: { id } }),
+  // `plan` ikut karena hampir semua pemanggil findById berakhir di toDto(), yang
+  // wajib melaporkan tier. Barisnya kecil dan berelasi 1:1, tidak seperti kolom
+  // `avatar` yang justru harus dijauhkan dari jalur ini.
+  findById: (id) => prisma.user.findUnique({ where: { id }, include: { plan: true } }),
 
   // Dipisah dari findById: kolom `avatar` bisa berukuran belasan MB, jadi ia
   // tidak boleh ikut terangkut di jalur yang cuma butuh profil/role. Dua query
@@ -50,6 +53,7 @@ export const userRepository = {
         isSuspended: true,
         financialScore: true,
         createdAt: true,
+        plan: { select: { tier: true, expiresAt: true } },
       },
     });
   },

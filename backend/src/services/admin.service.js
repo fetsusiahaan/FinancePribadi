@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { userRepository } from "../repositories/user.repository.js";
 import { transactionRepository } from "../repositories/transaction.repository.js";
 import * as budgetService from "./budget.service.js";
+import * as planService from "./plan.service.js";
 import { prisma } from "../config/db.js";
 import { parseMonth, previousMonth, nowInJakarta, asTimestampBound } from "../utils/period.js";
 
@@ -40,6 +41,7 @@ function toUserDto(user) {
     role: user.role,
     is_suspended: user.isSuspended,
     financial_score: user.financialScore,
+    ...planService.toPlanDto(user.plan ?? null),
     created_at: user.createdAt,
   };
 }
@@ -189,10 +191,22 @@ export async function getOverview() {
       goals_count: goalsCount,
     },
     ai_summary: null,
-    subscription_summary: null,
+    subscription_summary: await planService.summarizeTiers(totalUsers),
     recent_activity: null,
     system_alerts: null,
   };
+}
+
+export async function updateTier(actorId, targetId, { tier, note }) {
+  const target = await userRepository.findById(targetId);
+  if (!target) throw httpError("User not found", 404);
+  return planService.setTier(actorId, targetId, { tier, note });
+}
+
+export async function listPlanGrants(targetId) {
+  const target = await userRepository.findById(targetId);
+  if (!target) throw httpError("User not found", 404);
+  return { items: await planService.listGrants(targetId) };
 }
 
 export async function resetPassword(targetId) {

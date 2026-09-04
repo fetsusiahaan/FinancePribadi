@@ -4,6 +4,7 @@ import { prisma } from "../config/db.js";
 import { signToken } from "../utils/jwt.js";
 import { toDto as toTransactionDto } from "./transaction.service.js";
 import { logActivity } from "./activityLog.service.js";
+import { toPlanDto } from "./plan.service.js";
 
 function httpError(message, status) {
   const err = new Error(message);
@@ -31,6 +32,10 @@ export function toDto(user) {
     risk_profile: user.riskProfile,
     preferred_currency: user.preferredCurrency,
     financial_score: user.financialScore,
+    // Tier lewat toPlanDto, bukan user.plan.tier langsung: yang dikirim harus
+    // tier yang BERLAKU, sudah memperhitungkan kedaluwarsa. Tidak adanya baris
+    // plan menghasilkan FREE, bukan null.
+    ...toPlanDto(user.plan ?? null),
     // Isi avatar SENGAJA tidak ikut -- lihat komentar di schema.prisma.
     // Yang dikirim cuma penanda ada/tidak, supaya UI tahu harus menampilkan
     // foto atau inisial tanpa harus mengunduh blob-nya lebih dulu.

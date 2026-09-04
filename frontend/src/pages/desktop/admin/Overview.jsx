@@ -152,11 +152,15 @@ export function AdminOverview() {
         {/* Subscription */}
         <Card className="p-md">
           <h2 className="text-lg font-semibold mb-sm">Subscription</h2>
-          <EmptyState
-            icon="credit_card"
-            title="Belum tersedia"
-            description="Belum ada modul subscription/billing yang terhubung."
-          />
+          <div className="divide-y divide-outline-variant/40 dark:divide-dark-outline-variant/40">
+            <SummaryRow label="Free" value={formatThousands(data.subscription_summary.free)} />
+            <SummaryRow label="Premium" value={formatThousands(data.subscription_summary.premium)} />
+            <SummaryRow label="Lifetime" value={formatThousands(data.subscription_summary.lifetime)} />
+            <SummaryRow label="Total berbayar" value={formatThousands(data.subscription_summary.paying)} />
+            {/* Pendapatan masih kosong: tier diberikan manual admin, jadi belum
+                ada nominal yang tercatat di sistem ini. */}
+            <UnavailableRow label="Pendapatan bulan ini" />
+          </div>
         </Card>
 
         {/* Recent Activity */}

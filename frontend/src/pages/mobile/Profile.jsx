@@ -8,6 +8,7 @@ import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Modal } from "../../components/ui/Modal";
 import { ThemeToggle } from "../../components/ui/ThemeToggle";
+import { TierBadge } from "../../components/ui/TierBadge";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMe, updateMe, changePassword, exportMyData, deleteMe } from "../../services/user.service";
 import { formatThousands, stripThousands } from "../../utils/format";
@@ -438,7 +439,10 @@ export function Profile() {
               {initials(user.name)}
             </span>
             <div className="min-w-0">
-              <p className="font-semibold truncate">{user.name}</p>
+              <div className="flex items-center gap-xs min-w-0">
+                <p className="font-semibold truncate">{user.name}</p>
+                <TierBadge tier={user.tier} />
+              </div>
               <p className="text-body-sm text-on-surface-variant dark:text-dark-on-surface-variant truncate">
                 {user.email}
               </p>

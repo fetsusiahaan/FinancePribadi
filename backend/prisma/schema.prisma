@@ -17,6 +17,15 @@ enum UserRole {
   ADMIN
 }
 
+// Tier komersial akun (PRD.md §Monetization). BERBEDA dari UserRole: UserRole
+// menentukan siapa yang boleh masuk panel admin, Tier menentukan seberapa banyak
+// yang boleh dipakai. Keduanya tidak pernah saling menggantikan.
+enum Tier {
+  FREE
+  PREMIUM
+  LIFETIME
+}
+
 model User {
   id             String   @id @default(uuid())
   email          String   @unique
@@ -55,7 +64,68 @@ model User {
   sharedTransactions    SharedTransaction[]       @relation("SharedTransactionCreator")
   deviceTokens          DeviceToken[]
 
+  plan             UserPlan?
+  planGrants       PlanGrant[] @relation("PlanGrantTarget")
+  planGrantsIssued PlanGrant[] @relation("PlanGrantActor")
+
   @@map("users")
+}
+
+// Tier akun SEKARANG. Satu baris per user.
+//
+// Tidak adanya baris berarti FREE, bukan keadaan rusak: user lama tidak perlu
+// di-backfill dan jalur registrasi tidak perlu disentuh sama sekali. Yang
+// membaca tabel ini WAJIB lewat resolveTier() di plan.service.js -- kolom `tier`
+// mentah tidak pernah cukup, karena PREMIUM yang lewat expiresAt harus terbaca
+// sebagai FREE.
+model UserPlan {
+  id        String    @id @default(uuid())
+  userId    String    @unique @map("user_id")
+  tier      Tier      @default(FREE)
+  startsAt  DateTime  @default(now()) @map("starts_at")
+  expiresAt DateTime? @map("expires_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  // Penanda "sudah diberitahu", diisi penjadwal di scheduler.js.
+  //
+  // Isinya BUKAN boolean dan bukan tanggal pengiriman, melainkan SALINAN
+  // expiresAt yang notifikasinya sudah terkirim. Bentuk ini yang membuatnya
+  // benar tanpa logika pembersih: begitu user memperpanjang, expiresAt berubah
+  // sehingga penanda lama otomatis tidak lagi cocok dan siklus berikutnya
+  // kembali aktif dengan sendirinya. Boolean akan perlu direset manual di
+  // setTier(), dan yang lupa direset berarti user tidak pernah diperingatkan
+  // lagi seumur akun.
+  warnedFor          DateTime? @map("warned_for")
+  expiredNotifiedFor DateTime? @map("expired_notified_for")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_plans")
+}
+
+// Riwayat pemberian tier. Append-only: tidak pernah di-UPDATE, tidak pernah
+// di-DELETE. Dua tabel selalu berisiko melenceng satu sama lain; penangkalnya
+// bukan trigger, tapi aturan bahwa hanya setTier() di plan.service.js yang boleh
+// menulis ke user_plans maupun plan_grants, dan ia menulis keduanya dalam satu
+// $transaction.
+model PlanGrant {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  tier        Tier
+  startsAt    DateTime  @default(now()) @map("starts_at")
+  expiresAt   DateTime? @map("expires_at")
+  // Admin pelaku. null = diberikan sistem (mis. seeding), BUKAN "tidak diketahui".
+  grantedById String?   @map("granted_by_id")
+  note        String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user      User  @relation("PlanGrantTarget", fields: [userId], references: [id], onDelete: Cascade)
+  // SetNull, bukan Cascade: menghapus akun admin tidak boleh menghapus jejak
+  // pemberian tier ke orang lain.
+  grantedBy User? @relation("PlanGrantActor", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("plan_grants")
 }
 
 model DeviceToken {

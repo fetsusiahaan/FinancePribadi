@@ -96,6 +96,11 @@ const NOW_FIELDS = {
   SharedFinanceMember: ["joinedAt", "createdAt"],
   SharedFinanceInvitation: ["createdAt"],
   SharedTransaction: ["createdAt"],
+  // startsAt di kedua model ini biasanya diisi eksplisit oleh setTier(), tapi
+  // tetap didaftar: fillImplicit hanya mengisi yang undefined, jadi nilai
+  // eksplisit tidak tersentuh sementara pemanggil lain tetap terlindungi.
+  UserPlan: ["startsAt"],
+  PlanGrant: ["startsAt", "createdAt"],
 };
 
 const UPDATED_AT_FIELDS = {
@@ -103,6 +108,7 @@ const UPDATED_AT_FIELDS = {
   SharedFinance: ["updatedAt"],
   SharedFinanceMember: ["updatedAt"],
   SharedTransaction: ["updatedAt"],
+  UserPlan: ["updatedAt"],
 };
 
 const isDate = (v) => v instanceof Date && !Number.isNaN(v.getTime());
